@@ -1,0 +1,31 @@
+{
+  "name": "@axiom-crypto/halo2-wasm",
+  "description": "Halo2 wasm bindings",
+  "version": "0.1.45",
+  "files": [
+    "halo2_wasm_bg.wasm",
+    "halo2_wasm.js",
+    "halo2_wasm.d.ts",
+    "snippets/"
+  ],
+  "module": "halo2_wasm.js",
+  "types": "halo2_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "scripts": {
+    "build": "./build.sh"
+  },
+  "keywords": [
+    "axiom",
+    "ethereum",
+    "zero knowledge",
+    "zk",
+    "coprocessor",
+    "halo2",
+    "wasm"
+  ],
+  "publishConfig": {
+    "directory": "pkg"
+  }
+}
