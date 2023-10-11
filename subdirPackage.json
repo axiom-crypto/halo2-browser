@@ -1,0 +1,14 @@
+{
+  "name": "@axiom-crypto/halo2-wasm",
+  "description": "Halo2 wasm bindings",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "halo2_wasm_bg.wasm",
+    "index.js",
+    "index.d.ts"
+  ],
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

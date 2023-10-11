@@ -1,20 +1,11 @@
 {
   "name": "@axiom-crypto/halo2-wasm",
   "description": "Halo2 wasm bindings",
-  "version": "0.1.45",
-  "files": [
-    "halo2_wasm_bg.wasm",
-    "halo2_wasm.js",
-    "halo2_wasm.d.ts",
-    "snippets/"
-  ],
-  "module": "halo2_wasm.js",
-  "types": "halo2_wasm.d.ts",
-  "sideEffects": [
-    "./snippets/*"
-  ],
+  "version": "0.1.46",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "./build.sh"
+    "build": "./scripts/build.sh"
   },
   "keywords": [
     "axiom",
