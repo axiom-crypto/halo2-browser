@@ -1,4 +1,4 @@
-// Functions that are to be run after the typescript compiler runs
+// Generates a well-formed package.json for the /pkg folder
 
 const fs = require('fs');
 const packageJson = require('../package.json');
@@ -6,6 +6,8 @@ const packageJson = require('../package.json');
 // Copies a modified version of package.json to the /dist folder
 function copyPackageJson() {
   const packageJsonCopy = { ...packageJson };
+  delete packageJsonCopy.main;
+  delete packageJsonCopy.types;
   delete packageJsonCopy.scripts;
   delete packageJsonCopy.devDependencies;
   delete packageJsonCopy.publishConfig;
@@ -16,10 +18,6 @@ function copyReadme() {
   fs.copyFileSync('./readme.md', './pkg/readme.md');
 }
 
-function copyWebTypedef() {
-  fs.copyFileSync('./pkg/web/halo2_wasm.d.ts', './pkg/index.d.ts');
-}
 
 copyPackageJson();
 copyReadme();
-copyWebTypedef();

@@ -10,6 +10,6 @@ rm temp-pkg/.gitignore
 # Copy a modified version of package.json and readme.md to pkg/
 node ./scripts/makeSubdirPkg.js
 
-sed -i '' "s/require('env')/{memory: new WebAssembly.Memory({initial: 100,maximum: 65536,shared: true,})}/g" temp-pkg/halo2_wasm.js
+sed -i '' "s/require('env')/{memory: new WebAssembly.Memory({initial: 100,maximum: 65536,shared: true,})}/g" temp-pkg/index.js
 
 mv temp-pkg pkg/js
