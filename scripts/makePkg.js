@@ -9,19 +9,17 @@ function copyPackageJson() {
   delete packageJsonCopy.scripts;
   delete packageJsonCopy.devDependencies;
   delete packageJsonCopy.publishConfig;
-  fs.writeFileSync('./temp-pkg/package.json', JSON.stringify(packageJsonCopy, null, 2));
-  const parentPackageJsonCopy = {
-    name: packageJsonCopy.name,
-    description: packageJsonCopy.description,
-    version: packageJsonCopy.version,
-    keywords: packageJsonCopy.keywords,
-  }
-  fs.writeFileSync('./pkg/package.json', JSON.stringify(parentPackageJsonCopy, null, 2));
+  fs.writeFileSync('./pkg/package.json', JSON.stringify(packageJsonCopy, null, 2));
 }
 
 function copyReadme() {
-  fs.copyFileSync('./readme.md', './temp-pkg/readme.md');
+  fs.copyFileSync('./readme.md', './pkg/readme.md');
+}
+
+function copyWebTypedef() {
+  fs.copyFileSync('./pkg/web/halo2_wasm.d.ts', './pkg/index.d.ts');
 }
 
 copyPackageJson();
 copyReadme();
+copyWebTypedef();

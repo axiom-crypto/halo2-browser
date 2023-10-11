@@ -8,6 +8,6 @@ rm temp-pkg/.gitignore
 # then run `cd pkg && npm publish` with correct credentials
 
 # Copy a modified version of package.json and readme.md to pkg/
-node ./scripts/makePackage.js
+node ./scripts/makeSubdirPkg.js
 
 mv temp-pkg pkg/web

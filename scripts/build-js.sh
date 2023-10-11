@@ -8,7 +8,7 @@ rm temp-pkg/.gitignore
 # then run `cd pkg && npm publish` with correct credentials
 
 # Copy a modified version of package.json and readme.md to pkg/
-node ./scripts/makePackage.js
+node ./scripts/makeSubdirPkg.js
 
 sed -i '' "s/require('env')/{memory: new WebAssembly.Memory({initial: 100,maximum: 65536,shared: true,})}/g" temp-pkg/halo2_wasm.js
 
