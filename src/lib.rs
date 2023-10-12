@@ -103,6 +103,7 @@ impl Halo2Wasm {
         self.clear_instances();
     }
 
+    #[wasm_bindgen(js_name = clearInstances)]
     pub fn clear_instances(&mut self) {
         let len = self.public.len();
         self.public = std::iter::repeat_with(std::vec::Vec::new)
@@ -133,6 +134,7 @@ impl Halo2Wasm {
         .unwrap();
     }
 
+    #[wasm_bindgen(js_name = getInstances)]
     pub fn get_instances(&mut self, col: usize) -> Vec<u32> {
         let values: Vec<u32> = self
             .public
@@ -144,6 +146,7 @@ impl Halo2Wasm {
         values
     }
 
+    #[wasm_bindgen(js_name = setInstances)]
     pub fn set_instances(&mut self, instances: &[u32], col: usize) {
         let instances: Vec<AssignedValue<Fr>> = instances
             .iter()
@@ -154,6 +157,7 @@ impl Halo2Wasm {
         public.extend(instances);
     }
 
+    #[wasm_bindgen(js_name = getInstanceValues)]
     pub fn get_instance_values(&mut self, col: usize) -> JsValue {
         let values: Vec<&Fr> = self
             .public
@@ -182,6 +186,7 @@ impl Halo2Wasm {
         self.clear();
     }
 
+    #[wasm_bindgen(js_name = getCircuitStats)]
     pub fn get_circuit_stats(&mut self) -> CircuitStats {
         let statistics = self.circuit.borrow_mut().statistics();
         let advice = statistics.gate.total_advice_per_phase[0];
@@ -199,6 +204,7 @@ impl Halo2Wasm {
         }
     }
 
+    #[wasm_bindgen(js_name = getVk)]
     pub fn get_vk(&self) -> Vec<u8> {
         let file = self
             .vk
@@ -208,6 +214,7 @@ impl Halo2Wasm {
         file
     }
 
+    #[wasm_bindgen(js_name = getPartialVk)]
     pub fn get_partial_vk(&self) -> Vec<u8> {
         let vk = self.vk.as_ref().unwrap();
         let preprocessed = vk
@@ -226,6 +233,7 @@ impl Halo2Wasm {
         write_partial_vkey(&partial_vk).expect("Write partial vk should not fail")
     }
 
+    #[wasm_bindgen(js_name = getPk)]
     pub fn get_pk(&self) -> Vec<u8> {
         let file = self
             .pk
@@ -235,6 +243,7 @@ impl Halo2Wasm {
         file
     }
 
+    #[wasm_bindgen(js_name = assignInstances)]
     pub fn assign_instances(&mut self) {
         let flattened: Vec<AssignedValue<Fr>> = concat(self.public.clone());
         self.circuit.borrow_mut().assigned_instances = vec![flattened];
@@ -253,11 +262,13 @@ impl Halo2Wasm {
         .assert_satisfied();
     }
 
+    #[wasm_bindgen(js_name = loadParams)]
     pub fn load_params(&mut self, params: &[u8]) {
         let params = ParamsKZG::<Bn256>::read(&mut BufReader::new(params)).unwrap();
         self.params = Some(params);
     }
 
+    #[wasm_bindgen(js_name = loadVk)]
     pub fn load_vk(&mut self, vk: &[u8]) {
         let vk_reader = &mut BufReader::new(vk);
         let params = self.circuit_params.clone().unwrap();
@@ -270,12 +281,14 @@ impl Halo2Wasm {
         self.vk = Some(vk);
     }
 
+    #[wasm_bindgen(js_name = genVk)]
     pub fn gen_vk(&mut self) {
         let params = self.params.as_ref().unwrap();
         let vk = keygen_vk(params, &*self.circuit.borrow()).expect("vk should not fail");
         self.vk = Some(vk);
     }
 
+    #[wasm_bindgen(js_name = genPk)]
     pub fn gen_pk(&mut self) {
         let vk = self.vk.clone().unwrap();
         let params = self.params.as_ref().unwrap();
@@ -296,7 +309,7 @@ impl Halo2Wasm {
     }
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = initPanicHook)]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
