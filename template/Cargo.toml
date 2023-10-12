@@ -1,0 +1,20 @@
+[package]
+name = "halo2-wasm-template"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.87"
+
+halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", package = "halo2-base", branch = "develop", features = [
+    "halo2-axiom",
+] }
+
+halo2-wasm = { git = "https://github.com/axiom-crypto/halo2-wasm.git", default-features = false  }
+
+[features]
+default=["rayon"]
+rayon=["halo2-wasm/rayon"]
