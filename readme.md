@@ -39,7 +39,7 @@ const main = async () => {
 ### Node.js
 
 ```typescript
-import { Halo2Wasm, initPanicHook, MyCircuit } from "@axiom-crypto/halo2-wasm/js";
+import { Halo2Wasm, initPanicHook, MyCircuit } from "<IMPORT PATH>";
 
 const main = async () => {
 
