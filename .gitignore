@@ -5,3 +5,4 @@ params
 pkg
 dist
 .vscode
+node_modules

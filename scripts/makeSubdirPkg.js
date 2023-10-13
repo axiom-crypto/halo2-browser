@@ -15,11 +15,5 @@ function copyReadme() {
   fs.copyFileSync('./readme.md', './temp-pkg/readme.md');
 }
 
-function renameFiles() {
-  fs.renameSync('./temp-pkg/halo2_wasm.js', './temp-pkg/index.js');
-  fs.renameSync('./temp-pkg/halo2_wasm.d.ts', './temp-pkg/index.d.ts');
-}
-
 copyVersion();
 copyReadme();
-renameFiles();

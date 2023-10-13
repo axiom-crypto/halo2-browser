@@ -5,6 +5,7 @@
     "outDir": "./pkg"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "js"
   ]
 }
