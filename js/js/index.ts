@@ -2,7 +2,7 @@ import { Halo2Wasm, initPanicHook, Halo2LibWasm, CircuitConfig } from "../../pkg
 import { getKzgParams } from "../kzg";
 import { DEFAULT_CIRCUIT_CONFIG } from "../shared";
 
-export { CircuitConfig, DEFAULT_CIRCUIT_CONFIG };
+export { CircuitConfig, DEFAULT_CIRCUIT_CONFIG, Halo2Wasm, Halo2LibWasm, initPanicHook, getKzgParams };
 
 export const getHalo2Wasm = () => {
     initPanicHook();
