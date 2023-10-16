@@ -2,7 +2,7 @@ import init, { initThreadPool, initPanicHook, Halo2Wasm, Halo2LibWasm, CircuitCo
 import { getKzgParams } from "../kzg";
 import { DEFAULT_CIRCUIT_CONFIG } from "../shared";
 
-export { CircuitConfig, DEFAULT_CIRCUIT_CONFIG };
+export { CircuitConfig, DEFAULT_CIRCUIT_CONFIG, init, initThreadPool, Halo2Wasm, Halo2LibWasm, initPanicHook, getKzgParams };
 
 export const getHalo2Wasm = async (numThreads: number) => {
     await init();

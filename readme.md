@@ -23,7 +23,7 @@ Halo2 uses Rayon for multithreading, and we use `wasm-bindgen-rayon` to support 
 ### Web
 
 ```typescript
-import init, { initThreadPool, initPanicHook, Halo2Wasm, MyCircuit } from "<IMPORT PATH>";
+import { init, initThreadPool, initPanicHook, Halo2Wasm, MyCircuit } from "<IMPORT PATH>";
 
 const main = async () => {
 
