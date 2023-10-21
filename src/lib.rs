@@ -21,11 +21,11 @@ use snark_verifier_sdk::halo2::POSEIDON_SPEC;
 use snark_verifier_sdk::NativeLoader;
 use std::cell::RefCell;
 use std::io::BufReader;
+use std::rc::Rc;
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 mod vkey;
 use vkey::{write_partial_vkey, PartialVerifyingKey};
-use std::sync::Arc;
 
 #[cfg(all(target_family = "wasm", feature = "rayon"))]
 pub use wasm_bindgen_rayon::init_thread_pool;
@@ -70,7 +70,7 @@ pub struct CircuitConfig {
 #[wasm_bindgen]
 pub struct Halo2Wasm {
     #[wasm_bindgen(skip)]
-    pub circuit: Arc<RefCell<BaseCircuitBuilder<Fr>>>,
+    pub circuit: Rc<RefCell<BaseCircuitBuilder<Fr>>>,
     #[wasm_bindgen(skip)]
     pub public: Vec<Vec<AssignedValue<Fr>>>,
     #[wasm_bindgen(skip)]
@@ -86,7 +86,7 @@ impl Halo2Wasm {
     pub fn new() -> Self {
         let circuit = BaseCircuitBuilder::new(false);
         Halo2Wasm {
-            circuit: Arc::new(RefCell::new(circuit)),
+            circuit: Rc::new(RefCell::new(circuit)),
             public: vec![],
             circuit_params: None,
             params: None,

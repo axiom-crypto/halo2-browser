@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use halo2_base::gates::circuit::builder::BaseCircuitBuilder;
 use halo2_base::gates::flex_gate::{GateChip, GateInstructions};
@@ -25,7 +25,7 @@ const SECURE_MDS: usize = 0;
 pub struct Halo2LibWasm {
     gate: GateChip<Fr>,
     range: RangeChip<Fr>,
-    builder: Arc<RefCell<BaseCircuitBuilder<Fr>>>,
+    builder: Rc<RefCell<BaseCircuitBuilder<Fr>>>,
 }
 
 #[wasm_bindgen]
@@ -41,8 +41,19 @@ impl Halo2LibWasm {
         Halo2LibWasm {
             gate,
             range,
-            builder: Arc::clone(&circuit.circuit),
+            builder: Rc::clone(&circuit.circuit),
         }
+    }
+
+    pub fn config(&mut self) {
+        let gate = GateChip::new();
+        let lookup_bits = self.builder.borrow().config_params.lookup_bits.unwrap();
+        let range = RangeChip::new(
+            lookup_bits,
+            self.builder.borrow_mut().lookup_manager().clone(),
+        );
+        self.gate = gate;
+        self.range = range;
     }
 
     fn get_assigned_value(&mut self, idx: usize) -> AssignedValue<Fr> {

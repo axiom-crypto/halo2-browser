@@ -34,6 +34,7 @@ export abstract class CircuitScaffold {
 
   async setup(numThreads: number) {
     this.halo2wasm = await getHalo2Wasm(numThreads);
+    this.halo2wasm.config(this.config);
   }
 
   protected timeStart(name: string) {

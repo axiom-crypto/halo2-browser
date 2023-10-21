@@ -27,6 +27,7 @@ export abstract class CircuitScaffold {
     this.config = options?.config ?? DEFAULT_CIRCUIT_CONFIG;
     this.shouldTime = options?.shouldTime ?? false;
     this.loadedVk = false;
+    this.halo2wasm.config(this.config);
   }
 
   protected timeStart(name: string) {
