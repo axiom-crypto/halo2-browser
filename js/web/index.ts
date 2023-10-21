@@ -27,7 +27,7 @@ export abstract class CircuitScaffold {
   protected loadedVk: boolean;
 
   constructor(options?: { config?: CircuitConfig, shouldTime?: boolean }) {
-    this.config = options?.config ?? DEFAULT_CIRCUIT_CONFIG;
+    this.config = options?.config ?? { ...DEFAULT_CIRCUIT_CONFIG };
     this.shouldTime = options?.shouldTime ?? false;
     this.loadedVk = false;
   }

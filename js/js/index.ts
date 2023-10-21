@@ -24,7 +24,7 @@ export abstract class CircuitScaffold {
 
   constructor(options?: { config?: CircuitConfig, shouldTime?: boolean }) {
     this.halo2wasm = getHalo2Wasm();
-    this.config = options?.config ?? DEFAULT_CIRCUIT_CONFIG;
+    this.config = options?.config ?? { ...DEFAULT_CIRCUIT_CONFIG };
     this.shouldTime = options?.shouldTime ?? false;
     this.loadedVk = false;
     this.halo2wasm.config(this.config);
