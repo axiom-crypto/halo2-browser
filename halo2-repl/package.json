@@ -1,0 +1,44 @@
+{
+  "name": "axiom-repl-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@axiom-crypto/halo2-js": "^0.1.93",
+    "@axiom-crypto/halo2-wasm": "^0.1.56",
+    "@devbookhq/splitter": "^1.4.2",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "@monaco-editor/react": "^4.5.1",
+    "@tailwindcss/forms": "^0.5.6",
+    "@types/node": "20.4.6",
+    "@types/react": "18.2.18",
+    "@types/react-dom": "18.2.7",
+    "@vercel/analytics": "^1.0.2",
+    "autoprefixer": "10.4.14",
+    "comlink": "^4.4.1",
+    "connectkit": "^1.5.3",
+    "eslint": "8.46.0",
+    "eslint-config-next": "13.4.12",
+    "ethers": "^6.7.1",
+    "jszip": "^3.10.1",
+    "monaco-editor": "^0.41.0",
+    "next": "13.4.12",
+    "postcss": "8.4.31",
+    "prettier": "1.18.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwindcss": "3.3.3",
+    "typescript": "5.1.6",
+    "viem": "^1.10.9",
+    "wagmi": "^1.4.1"
+  },
+  "devDependencies": {
+    "@types/prettier": "1.18.2"
+  }
+}
