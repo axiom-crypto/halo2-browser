@@ -1,0 +1,3 @@
+[workspace]
+members = ["halo2-wasm"]
+resolver = "2"

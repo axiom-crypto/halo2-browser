@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@axiom-crypto/halo2-wasm':
-    specifier: ^0.1.56
+    specifier: 0.1.56
     version: 0.1.56
   ethers:
     specifier: ^6.7.1

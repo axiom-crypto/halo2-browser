@@ -6,10 +6,10 @@ settings:
 
 dependencies:
   '@axiom-crypto/halo2-js':
-    specifier: ^0.1.93
+    specifier: 0.1.93
     version: 0.1.93
   '@axiom-crypto/halo2-wasm':
-    specifier: ^0.1.56
+    specifier: 0.1.56
     version: 0.1.56
   '@devbookhq/splitter':
     specifier: ^1.4.2

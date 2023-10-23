@@ -1,4 +1,4 @@
-# halo2-js
+# halo2-lib-js
 
 This repository aims to streamline the process of writing circuits in Typescript using [halo2-lib-wasm](https://github.com/axiom-crypto/halo2-wasm/blob/0665753bedf1e678da1e16c31befd3bf304479ae/src/halo2lib.rs#L32). To discuss or collaborate, join our community on [Telegram](https://t.me/halo2browser).
 
