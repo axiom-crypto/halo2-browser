@@ -293,3 +293,4 @@ declare const console: {
      */
     log: (...args: any) => void;
 }
+declare const ecdsaBenchmark: (sk: bigint, msg_hash: bigint, k: bigint) => CircuitValue;

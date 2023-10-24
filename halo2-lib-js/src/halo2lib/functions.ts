@@ -378,4 +378,9 @@ export class Halo2Lib {
      */
     makePublic = (a: CircuitValue) => this. _halo2lib.make_public(this._halo2wasm, a.cell(), 0);
 
+    ecdsaBenchmark = (sk: bigint, msg_hash: bigint, k: bigint) => {
+        const res = this. _halo2lib.ecdsa_benchmark(sk, msg_hash, k);
+        return this.Cell(res);
+    }
+
 }

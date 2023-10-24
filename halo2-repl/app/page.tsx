@@ -480,7 +480,7 @@ function App() {
               <MenuButton
                 text="Docs"
                 onClick={() => {
-                  window.open('https://docs-v2.axiom.xyz/axiom-repl/compute-functions', '_blank');
+                  window.open('https://docs.axiom.xyz/zero-knowledge-proofs/halo2repl', '_blank');
                 }}
               />
             </div>
@@ -536,7 +536,7 @@ function App() {
               })}
               <div className="border-t" ref={logsEndRef} />
             </div>
-            <div className="p-1 text-sm text-gray-900 pt-3 font-semibold">Outputs</div>
+            <div className="p-1 text-sm text-gray-900 pt-3 font-semibold">ZK Public Inputs / Outputs</div>
             <div className="break-words text-xs font-mono p-2 overflow-y-auto h-40 border border-black">
               {publicOutputs.map((val, i) => {
                 return (
