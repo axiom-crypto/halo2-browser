@@ -6,10 +6,21 @@ use halo2_base::gates::flex_gate::{GateChip, GateInstructions};
 use halo2_base::gates::range::{RangeChip, RangeInstructions};
 use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
 use halo2_base::halo2_proofs::halo2curves::group::ff::PrimeField;
+// use halo2_base::halo2_proofs::halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine};
+use halo2_base::halo2_proofs::{
+    arithmetic::CurveAffine,
+    halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine},
+};
 use halo2_base::poseidon::hasher::spec::OptimizedPoseidonSpec;
 use halo2_base::poseidon::hasher::PoseidonHasher;
+use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
 use halo2_base::AssignedValue;
 use halo2_base::QuantumCell::Existing;
+use halo2_ecc::bigint::ProperCrtUint;
+use halo2_ecc::ecc::ecdsa::ecdsa_verify_no_pubkey_check;
+use halo2_ecc::ecc::EccChip;
+use halo2_ecc::fields::FieldChip;
+use halo2_ecc::secp256k1::{FpChip, FqChip};
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
 
@@ -339,6 +350,52 @@ impl Halo2LibWasm {
             .gate
             .pow_var(self.builder.borrow_mut().main(0), a, b, max_bits);
         self.to_js_assigned_value(out)
+    }
+
+    pub fn ecdsa_benchmark(&mut self, sk: u64, msg_hash: u64, k: u64) -> usize {
+        // let pk = self.get_assigned_values(pk);
+        // let r = self.get_assigned_value(r);
+        // let s = self.get_assigned_value(s);
+        // let msg_hash = self.get_assigned_value(msg_hash);
+
+        let sk = <Secp256k1Affine as CurveAffine>::ScalarExt::from(sk);
+        let pubkey = Secp256k1Affine::from(Secp256k1Affine::generator() * sk);
+        let msg_hash = <Secp256k1Affine as CurveAffine>::ScalarExt::from(msg_hash);
+
+        let k = <Secp256k1Affine as CurveAffine>::ScalarExt::from(k);
+        let k_inv = k.invert().unwrap();
+
+        let r_point = Secp256k1Affine::from(Secp256k1Affine::generator() * k)
+            .coordinates()
+            .unwrap();
+        let x = r_point.x();
+        let x_bigint = fe_to_biguint(x);
+
+        let r = biguint_to_fe::<Fq>(&(x_bigint % modulus::<Fq>()));
+        let s = k_inv * (msg_hash + (r * sk));
+
+        let fp_chip = FpChip::<Fr>::new(&self.range, 88, 3);
+        let fq_chip = FqChip::<Fr>::new(&self.range, 88, 3);
+
+        let [m, r, s] =
+            [msg_hash, r, s].map(|x| fq_chip.load_private(self.builder.borrow_mut().main(0), x));
+
+        let ecc_chip = EccChip::<Fr, FpChip<Fr>>::new(&fp_chip);
+        let pk = ecc_chip
+            .load_private_unchecked(self.builder.borrow_mut().main(0), (pubkey.x, pubkey.y));
+
+        let res = ecdsa_verify_no_pubkey_check::<Fr, Fp, Fq, Secp256k1Affine>(
+            &ecc_chip,
+            self.builder.borrow_mut().main(0),
+            pk,
+            r,
+            s,
+            m,
+            4,
+            4,
+        );
+
+        self.to_js_assigned_value(res)
     }
 
     pub fn poseidon(&mut self, a: &[u32]) -> usize {
