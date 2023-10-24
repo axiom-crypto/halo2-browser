@@ -109,4 +109,10 @@ export class Halo2Repl extends CircuitScaffold {
         return blob;
     }
 
+    verify(proof: Uint8Array) {
+        this.timeStart("SNARK proof verification")
+        this.halo2wasm.verify(proof);
+        this.timeEnd("SNARK proof verification")
+    }
+
 }

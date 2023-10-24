@@ -206,9 +206,15 @@ function App() {
       appendLogs("Starting proof generation. This may take up to a minute.")
       const proof = await workerApi.current?.prove();
       if (proof) setProof(proof);
-      await workerApi.current?.stopConsoleCapture();
     });
   };
+
+  const verify = async () => {
+    await withRedirectedConsole(async () => {
+      if (!proof) appendError("No proof found. Please generate proof first.")
+      else await workerApi.current?.verify(proof);
+    })
+  }
 
   const downloadVk = async () => {
     let vkExport = await workerApi.current?.exportVk();
@@ -269,9 +275,9 @@ function App() {
       target: monaco.languages.typescript.ScriptTarget.ES2020,
       lib: ["es2020"]
     });
-    const docs = [{docs: halo2Docs, name: "halo2lib.d.ts"}, {docs: makePublicDocs, name: "makePublic.d.ts"}];
-    if(defaultInputs){
-      docs.push({docs: parseCircuitTypes(defaultInputs), name: "inputs.d.ts"})
+    const docs = [{ docs: halo2Docs, name: "halo2lib.d.ts" }, { docs: makePublicDocs, name: "makePublic.d.ts" }];
+    if (defaultInputs) {
+      docs.push({ docs: parseCircuitTypes(defaultInputs), name: "inputs.d.ts" })
     }
     docs.forEach(doc => {
       monaco.languages.typescript.javascriptDefaults.addExtraLib(doc.docs, doc.name);
@@ -401,6 +407,11 @@ function App() {
                 onClick: prove,
                 shouldLoad: true
               },
+              {
+                text: "Verify proof",
+                onClick: verify,
+                shouldLoad: true
+              }
               // {
               //   text: chain?.name ? `Current Network: ${chain.name}` : "Connect Wallet",
               //   onClick: () => {
