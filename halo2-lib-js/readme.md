@@ -1,6 +1,6 @@
 # halo2-lib-js
 
-This repository aims to streamline the process of writing circuits in Typescript using [halo2-lib-wasm](https://github.com/axiom-crypto/halo2-wasm/blob/0665753bedf1e678da1e16c31befd3bf304479ae/src/halo2lib.rs#L32). To discuss or collaborate, join our community on [Telegram](https://t.me/halo2browser).
+This repository aims to streamline the process of writing circuits in Typescript using [halo2-lib-wasm](../halo2-wasm/src/halo2lib.rs). To discuss or collaborate, join our community on [Telegram](https://t.me/halo2browser).
 
 ## Getting Started
 
@@ -8,7 +8,7 @@ To build your own `halo2-wasm` module, see this [README](https://github.com/axio
 
 Install `halo2-js` in your own JS/TS project with
 ```
-pnpm install @axiom-crypto/halo2-js
+pnpm install @axiom-crypto/halo2-lib-js
 ```
 or use your favorite package manager (npm, yarn, etc.).
 
@@ -20,7 +20,7 @@ The `halo2-wasm` package already has an abstract `CircuitScaffold` that must imp
 
 ```typescript
 import { Halo2LibWasm, CircuitConfig, CircuitScaffold } from "@axiom-crypto/halo2-wasm/web";
-import { Halo2CircuitRunner, Halo2Lib } from "@axiom-crypto/halo2-js";
+import { Halo2CircuitRunner, Halo2Lib } from "@axiom-crypto/halo2-lib-js";
 
 export class WebCircuitScaffold extends CircuitScaffold {
 
@@ -50,7 +50,7 @@ export class WebCircuitScaffold extends CircuitScaffold {
 
 ```typescript
 import { Halo2LibWasm, CircuitConfig, CircuitScaffold } from "@axiom-crypto/halo2-wasm/js";
-import { Halo2CircuitRunner, Halo2Lib } from "@axiom-crypto/halo2-js";
+import { Halo2CircuitRunner, Halo2Lib } from "@axiom-crypto/halo2-lib-js";
 
 export class JsCircuitScaffold extends CircuitScaffold {
 
