@@ -1,6 +1,6 @@
 # halo2-browser
 
-This is a monorepo for using the halo2 proving system in-browser using WASM. 
+This is a monorepo for using the halo2 proving system in-browser using WASM. To discuss or collaborate, join our community on [Telegram](https://t.me/halo2browser). 
 
 ## Directory Structure
 
