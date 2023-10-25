@@ -6,8 +6,8 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import { type editor } from 'monaco-editor';
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Halo2Repl } from "./worker/halo2repl";
-import { DEFAULT_CIRCUIT_CONFIG, makePublicDocs, halo2Docs } from "@axiom-crypto/halo2-lib-js"
-import { DEFAULT_CODE, DEFAULT_INPUT } from "@/utils/constants";
+import { DEFAULT_CIRCUIT_CONFIG, makePublicDocs, halo2Docs, CircuitConfig } from "@axiom-crypto/halo2-lib-js"
+import { DEFAULT_CODE, DEFAULT_INPUT, ecdsaBenchmarkConfigs } from "@/utils/constants";
 import { fetchGist, fetchGithubAccessToken } from "@/utils/github";
 import JSZip from "jszip";
 import Dropdown from "@/components/MenuDropdown";
@@ -56,12 +56,7 @@ function App() {
   const [publicOutputs, setPublicOutputs] = useState([] as string[]);
 
   const [logs, setLogs] = useState([] as { type: LogType, text: string, url?: string, linkText?: string }[]);
-  const [config, setConfig] = useState<{
-    k: number;
-    numAdvice: number;
-    numInstance: number;
-    numLookupBits: number;
-  }>(DEFAULT_CIRCUIT_CONFIG);
+  const [config, setConfig] = useState(DEFAULT_CIRCUIT_CONFIG);
 
   const workerApi = useRef<Remote<Halo2Repl>>();
 
@@ -132,7 +127,7 @@ function App() {
   const populateCircuit = async () => {
     const inputs = inputsRef.current?.getValue() ?? "";
     const code = editorRef.current?.getValue() ?? "";
-    const newConfig = await workerApi.current?.populateCircuit(code, inputs);
+    const newConfig = await workerApi.current?.populateCircuit(code, inputs, config);
     if (!newConfig) return;
     setConfig(newConfig);
     const circuitInfo = await workerApi.current?.getCircuitStats();
@@ -493,6 +488,15 @@ function App() {
                 onClick={() => {
                   window.open('https://docs.axiom.xyz/zero-knowledge-proofs/halo2repl', '_blank');
                 }}
+              />
+              <Dropdown
+                text="Benchmark"
+                items={ecdsaBenchmarkConfigs.map((config, i) => {
+                  return {
+                    text: config.k.toString(),
+                    onClick: async () => setConfig(config)
+                  }
+                })}
               />
             </div>
             <Splitter direction={SplitDirection.Vertical} gutterClassName="bg-gray-100 w-1" initialSizes={initialSizesVertical} onResizeFinished={handleResizeFinishedVertical}>

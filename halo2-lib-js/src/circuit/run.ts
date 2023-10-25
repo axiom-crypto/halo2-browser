@@ -36,21 +36,21 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
 
     async function runFromString(code: string, inputs: string) {
         clear();
-        const halo2Lib = new Halo2Lib(circuit, halo2LibWasm, { firstPass: true });
+        const halo2Lib = new Halo2Lib(circuit, halo2LibWasm);
         const halo2LibFns = Object.keys(halo2Lib).filter(key => !(typeof key === 'string' && key.charAt(0) === '_'));
         const functionInputs = getInputFunctionSignature(inputs);
         const parsedInputs = parseInputs(inputs);
         const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
         await fn(parsedInputs);
 
-        autoConfigCircuit(circuit, config);
-        clear();
-        {
-            const halo2Lib = new Halo2Lib(circuit, halo2LibWasm);
-            const halo2LibFns = Object.keys(halo2Lib).filter(key => !(typeof key === 'string' && key.charAt(0) === '_'));
-            const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
-            await fn(parsedInputs);
-        }
+        // autoConfigCircuit(circuit, config);
+        // clear();
+        // {
+        //     const halo2Lib = new Halo2Lib(circuit, halo2LibWasm);
+        //     const halo2LibFns = Object.keys(halo2Lib).filter(key => !(typeof key === 'string' && key.charAt(0) === '_'));
+        //     const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
+        //     await fn(parsedInputs);
+        // }
         return {
             config
         }

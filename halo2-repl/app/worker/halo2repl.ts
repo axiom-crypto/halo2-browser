@@ -1,6 +1,6 @@
 import prettier from 'prettier/standalone';
 import parserTypescript from 'prettier/parser-typescript';
-import { Halo2CircuitRunner, captureConsoleOutput } from '@axiom-crypto/halo2-lib-js';
+import { CircuitConfig, Halo2CircuitRunner, captureConsoleOutput } from '@axiom-crypto/halo2-lib-js';
 import { Halo2Lib } from '@axiom-crypto/halo2-lib-js';
 import { Halo2LibWasm, getHalo2LibWasm, CircuitScaffold, getKzgParams, DEFAULT_CIRCUIT_CONFIG } from '@axiom-crypto/halo2-wasm/web'
 
@@ -24,10 +24,10 @@ export class Halo2Repl extends CircuitScaffold {
         this.halo2Lib = getHalo2LibWasm(this.halo2wasm);
     }
 
-    async populateCircuit(rawCode: string, appInputs: string) {
+    async populateCircuit(rawCode: string, appInputs: string, _config: CircuitConfig) {
         this.code = rawCode + "\n";
         this.inputs = appInputs;
-        this.newCircuitFromConfig(DEFAULT_CIRCUIT_CONFIG);
+        this.newCircuitFromConfig({..._config});
         console.time("Witness generation")
         const { config } = await Halo2CircuitRunner(this.halo2wasm, this.halo2Lib, this.config).runFromString(this.code, this.inputs)
         this.config = config;
