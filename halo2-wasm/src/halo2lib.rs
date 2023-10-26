@@ -16,7 +16,6 @@ use halo2_base::poseidon::hasher::PoseidonHasher;
 use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
 use halo2_base::AssignedValue;
 use halo2_base::QuantumCell::Existing;
-use halo2_ecc::bigint::ProperCrtUint;
 use halo2_ecc::ecc::ecdsa::ecdsa_verify_no_pubkey_check;
 use halo2_ecc::ecc::EccChip;
 use halo2_ecc::fields::FieldChip;
