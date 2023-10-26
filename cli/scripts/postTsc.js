@@ -3,7 +3,6 @@
 const fs = require('fs');
 const packageJson = require('../package.json');
 const halo2WasmPackageJson = require('../../halo2-wasm/package.json');
-const halo2LibJsPackageJson = require('../../halo2-lib-js/package.json');
 const { execSync } = require('child_process');
 
 // Copies a modified version of package.json to the /dist folder
@@ -13,9 +12,8 @@ function copyPackageJson() {
     delete packageJsonCopy.devDependencies;
     delete packageJsonCopy.publishConfig;
     packageJsonCopy.dependencies['@axiom-crypto/halo2-wasm'] = halo2WasmPackageJson.version;
-    packageJsonCopy.dependencies['@axiom-crypto/halo2-lib-js'] = halo2LibJsPackageJson.version;
     packageJsonCopy.bin = {
-        'halo2-wasm': 'node index.js',
+        'halo2-wasm': './index.js',
     };
     fs.writeFileSync('./dist/package.json', JSON.stringify(packageJsonCopy, null, 2));
     const indexJs = fs.readFileSync("./dist/index.js", 'utf8');

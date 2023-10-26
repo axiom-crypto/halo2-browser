@@ -2,7 +2,9 @@ import * as ts from 'typescript';
 import * as vm from 'vm';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { DEFAULT_CIRCUIT_CONFIG } from '@axiom-crypto/halo2-wasm/shared';
+import { execSync } from 'child_process';
 
 export async function getFunctionFromTs(relativePath: string) {
     const code = fs.readFileSync(path.resolve(relativePath), 'utf8');
@@ -26,21 +28,37 @@ export async function getFunctionFromTs(relativePath: string) {
     };
 }
 
-export async function getRunCircuitFromTs(relativePath: string) {
+export async function getRunCircuitFromTs(relativePath: string | undefined) {
+    const home = os.homedir();
+    const halo2WasmRunnerPath = path.join(home, '.halo2-wasm', 'run.ts');
+    if(!relativePath) relativePath = halo2WasmRunnerPath;
     const code = fs.readFileSync(path.resolve(relativePath), 'utf8');
     const result = ts.transpileModule(code, {
         compilerOptions: { module: ts.ModuleKind.CommonJS }
     });
     const script = new vm.Script(result.outputText);
+    const customRequire = (moduleName: string) => {
+        try {
+            const npmRoot = execSync('npm root -g').toString().trim();
+            return require(`${npmRoot}/${moduleName}`);
+        } catch (e) {
+            throw new Error(`Cannot find module '${moduleName}'.\n Try installing it globally with 'npm install -g ${moduleName}'`);
+        }
+    };
     const context = vm.createContext({
         exports: {},
-        require: require,
+        require: customRequire,
         module: module,
         console: console,
         __filename: __filename,
         __dirname: __dirname,
     });
     script.runInContext(context);
+    const folderPath = path.dirname(halo2WasmRunnerPath);
+    if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath, { recursive: true });
+    }
+    fs.writeFileSync(halo2WasmRunnerPath, code)
     return context.exports.run;
 }
 

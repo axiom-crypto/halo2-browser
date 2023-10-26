@@ -1,10 +1,11 @@
 import { CircuitScaffold } from "./scaffold";
-import { getFunctionFromTs, getUint8ArrayFromBuffer, saveBufferToFile, saveJsonToFile } from "./utils";
+import { getFunctionFromTs, getRunCircuitFromTs, getUint8ArrayFromBuffer, saveBufferToFile, saveJsonToFile } from "./utils";
 
-export const prove = async (path: string, options: { pk: string, stats: boolean, proof: string, instances:string }) => {
+export const prove = async (path: string, options: { pk: string, stats: boolean, proof: string, instances:string, circuit: string }) => {
     const circuit = await getFunctionFromTs(path);
     const pkArr = getUint8ArrayFromBuffer(options.pk);
-    const scaffold = new CircuitScaffold(true);
+    let scaffold = new CircuitScaffold(true);
+    scaffold.runCircuit = await getRunCircuitFromTs(options.circuit);
     scaffold.newCircuitFromConfig(circuit.config);
     scaffold.loadParamsAndPk(pkArr);
     try {

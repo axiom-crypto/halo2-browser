@@ -1,4 +1,4 @@
-import { Halo2Lib } from "@axiom-crypto/halo2-lib-js";
+//@ts-ignore -- to avoid halo2-lib-js being a dependency of the cli
 export const circuit = async (halo2Lib: Halo2Lib, inputs: {x: number}) => {
     const {add, sub, mul, constant, witness, log, rangeCheck, makePublic, isLessThan} = halo2Lib;
     const x = witness(inputs.x);

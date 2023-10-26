@@ -1,5 +1,4 @@
-import { getHalo2Wasm, getHalo2LibWasm, Halo2LibWasm, CircuitScaffold as ICircuitScaffold, Halo2Wasm } from "@axiom-crypto/halo2-wasm/js/";
-import { CircuitConfig, Halo2CircuitRunner, Halo2Lib } from "@axiom-crypto/halo2-lib-js"
+import { getHalo2Wasm, getHalo2LibWasm, Halo2LibWasm, CircuitScaffold as ICircuitScaffold, Halo2Wasm, CircuitConfig } from "@axiom-crypto/halo2-wasm/js/";
 
 export class CircuitScaffold extends ICircuitScaffold {
     halo2Lib!: Halo2LibWasm;
@@ -16,7 +15,8 @@ export class CircuitScaffold extends ICircuitScaffold {
     }
 
     runCircuit = async (halo2wasm: Halo2Wasm, halo2Lib: Halo2LibWasm, config: CircuitConfig, circuit: any, inputs: any) => {
-        await Halo2CircuitRunner(halo2wasm, halo2Lib, config).run(circuit, inputs);
+        console.error("Please specify circuit runner!")
+        process.exit(1);
     }
 
     populateCircuit = async (circuit: any, inputs: any) => {
