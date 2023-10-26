@@ -24,6 +24,7 @@ Commands:
 ## Commands
 
 ### mock
+
 ```
 Usage: halo2-wasm mock [options] <circuit path>
 
@@ -39,6 +40,7 @@ Options:
 ```
 
 ### keygen
+
 ```
 Usage: halo2-wasm keygen [options] <circuit path>
 
@@ -55,6 +57,7 @@ Options:
 ```
 
 ### prove
+
 ```
 Usage: halo2-wasm prove [options] <circuit path>
 
@@ -73,6 +76,7 @@ Options:
 ```
 
 ### verify
+
 ```
 Usage: halo2-wasm verify [options] <circuit path>
 
@@ -88,3 +92,4 @@ Options:
   -c, --circuit [circuit scaffold]  circuit scaffold
   -h, --help                        display help for command
 ```
+
