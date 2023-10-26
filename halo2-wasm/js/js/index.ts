@@ -43,9 +43,13 @@ export abstract class CircuitScaffold {
     this.halo2wasm.config(config);
   }
 
-  async loadParamsAndVk(vk: Uint8Array) {
+  async loadParams(){
     const kzgParams = await getKzgParams(this.config.k);
     this.halo2wasm.loadParams(kzgParams);
+  }
+
+  async loadParamsAndVk(vk: Uint8Array) {
+    await this.loadParams();
     this.halo2wasm.loadVk(vk);
     this.loadedVk = true;
   }
@@ -57,8 +61,7 @@ export abstract class CircuitScaffold {
   }
 
   async keygen() {
-    const kzgParams = await getKzgParams(this.config.k);
-    this.halo2wasm.loadParams(kzgParams);
+    await this.loadParams();
     this.timeStart("VK generation")
     this.halo2wasm.genVk();
     this.timeEnd("VK generation")

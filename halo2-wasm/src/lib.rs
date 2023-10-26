@@ -8,7 +8,7 @@ use halo2_base::halo2_proofs::{
     plonk::*,
     poly::kzg::commitment::{KZGCommitmentScheme, ParamsKZG},
     poly::kzg::multiopen::VerifierSHPLONK,
-    poly::kzg::strategy::AccumulatorStrategy,
+    poly::kzg::strategy::SingleStrategy,
 };
 use halo2_base::AssignedValue;
 use itertools::concat;
@@ -127,7 +127,7 @@ impl Halo2Wasm {
         verify_proof::<KZGCommitmentScheme<Bn256>, VerifierSHPLONK<'_, Bn256>, _, _, _>(
             verifier_params,
             &vk,
-            AccumulatorStrategy::new(verifier_params),
+            SingleStrategy::new(verifier_params),
             &[&instances],
             &mut transcript_read,
         )
@@ -279,6 +279,19 @@ impl Halo2Wasm {
         )
         .unwrap();
         self.vk = Some(vk);
+    }
+
+    #[wasm_bindgen(js_name = loadPk)]
+    pub fn load_pk(&mut self, pk: &[u8]) {
+        let pk_reader = &mut BufReader::new(pk);
+        let params = self.circuit_params.clone().unwrap();
+        let pk = ProvingKey::<G1Affine>::read::<BufReader<&[u8]>, BaseCircuitBuilder<Fr>>(
+            pk_reader,
+            halo2_base::halo2_proofs::SerdeFormat::RawBytesUnchecked,
+            params,
+        )
+        .unwrap();
+        self.pk = Some(pk);
     }
 
     #[wasm_bindgen(js_name = genVk)]
