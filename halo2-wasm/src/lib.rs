@@ -1,36 +1,47 @@
 #![feature(trait_alias)]
-use halo2_base::gates::circuit::builder::BaseCircuitBuilder;
-use halo2_base::gates::circuit::BaseCircuitParams;
-use halo2_base::halo2_proofs::poly::commitment::{Params, ParamsProver};
-use halo2_base::halo2_proofs::{
-    dev::MockProver,
-    halo2curves::bn256::{Bn256, Fr, G1Affine},
-    plonk::*,
-    poly::kzg::commitment::{KZGCommitmentScheme, ParamsKZG},
-    poly::kzg::multiopen::VerifierSHPLONK,
-    poly::kzg::strategy::SingleStrategy,
-};
-use halo2_base::AssignedValue;
-use itertools::concat;
-use itertools::Itertools;
-use serde::{Deserialize, Serialize};
-use snark_verifier::system::halo2::transcript_initial_state;
-use snark_verifier_sdk::halo2::gen_snark_shplonk;
-use snark_verifier_sdk::halo2::PoseidonTranscript;
-use snark_verifier_sdk::halo2::POSEIDON_SPEC;
-use snark_verifier_sdk::NativeLoader;
+
 use std::cell::RefCell;
 use std::io::BufReader;
 use std::rc::Rc;
+
+use halo2_base::{
+    gates::circuit::{builder::BaseCircuitBuilder, BaseCircuitParams},
+    AssignedValue,
+};
+pub use halo2_ecc;
+use halo2_proofs::{
+    dev::MockProver,
+    halo2curves::bn256::{Bn256, Fr, G1Affine},
+    plonk::*,
+    poly::{
+        commitment::{Params, ParamsProver},
+        kzg::{
+            commitment::{KZGCommitmentScheme, ParamsKZG},
+            multiopen::VerifierSHPLONK,
+            strategy::SingleStrategy,
+        },
+    },
+};
+use itertools::{concat, Itertools};
+use serde::{Deserialize, Serialize};
+use snark_verifier::system::halo2::transcript_initial_state;
+use snark_verifier_sdk::{
+    halo2::{gen_snark_shplonk, PoseidonTranscript, POSEIDON_SPEC},
+    NativeLoader,
+};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
-mod vkey;
-use vkey::{write_partial_vkey, PartialVerifyingKey};
+
+pub use halo2_base;
+pub use halo2_base::halo2_proofs;
 
 #[cfg(all(target_family = "wasm", feature = "rayon"))]
 pub use wasm_bindgen_rayon::init_thread_pool;
 
 pub mod halo2lib;
+mod vkey;
+
+use vkey::{write_partial_vkey, PartialVerifyingKey};
 
 #[wasm_bindgen]
 extern "C" {
@@ -150,7 +161,12 @@ impl Halo2Wasm {
     pub fn set_instances(&mut self, instances: &[u32], col: usize) {
         let instances: Vec<AssignedValue<Fr>> = instances
             .iter()
-            .map(|x| self.circuit.borrow_mut().main(0).get((*x).try_into().unwrap()))
+            .map(|x| {
+                self.circuit
+                    .borrow_mut()
+                    .main(0)
+                    .get((*x).try_into().unwrap())
+            })
             .collect();
         let public = self.public.get_mut(col).unwrap();
         public.clear();
