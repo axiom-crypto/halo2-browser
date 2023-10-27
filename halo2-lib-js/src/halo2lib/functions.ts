@@ -13,7 +13,7 @@ export class Halo2Lib {
     constructor(halo2wasm: Halo2Wasm, circuit: Halo2LibWasm, options?: { firstPass?: boolean }) {
         this. _halo2lib = circuit;
         this._firstPass = options?.firstPass ?? false;
-        this._MAX_BITS = this.getPaddedNumBits("253");
+        this._MAX_BITS = this.getMaxPaddedNumBits();
         this._halo2wasm = halo2wasm;
     }
 
@@ -21,11 +21,15 @@ export class Halo2Lib {
         return new CircuitValue(this. _halo2lib, { cell: a });
     }
 
-    private getPaddedNumBits(numBits: string) {
-        let numBitsNum = Number(numBits);
+    private getMaxPaddedNumBits() {
         const lookupBits = this. _halo2lib.lookup_bits();
-        let paddedC = Math.floor(numBitsNum / lookupBits) * lookupBits - 1;
-        return paddedC.toString();
+        let maxPaddedNumBits = Math.floor(253 / lookupBits) * lookupBits - 1;
+        return maxPaddedNumBits.toString()
+    }
+
+    private getValidatedNumBits(numBits: string) {
+        if(Number(numBits) > Number(this._MAX_BITS)) throw new Error(`Number of bits must be less than ${this._MAX_BITS}`);
+        return numBits;
     }
 
     /**
@@ -282,7 +286,7 @@ export class Halo2Lib {
     checkLessThan = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS) => {
         this.rangeCheck(a, convertInput(c));
         this.rangeCheck(b, convertInput(c));
-        this. _halo2lib.check_less_than(a.cell(), b.cell(), this.getPaddedNumBits(c));
+        this. _halo2lib.check_less_than(a.cell(), b.cell(), this.getValidatedNumBits(c));
     }
 
     /**
@@ -296,7 +300,7 @@ export class Halo2Lib {
     isLessThan = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS) => {
         this.rangeCheck(a, convertInput(c));
         this.rangeCheck(b, convertInput(c));
-        return this.Cell(this. _halo2lib.is_less_than(a.cell(), b.cell(), this.getPaddedNumBits(c)));
+        return this.Cell(this. _halo2lib.is_less_than(a.cell(), b.cell(), this.getValidatedNumBits(c)));
     }
 
     /**
