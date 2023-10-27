@@ -34,7 +34,6 @@ function App() {
   const [circuitVk, setCircuitVk] = useState<Uint8Array | null>(null);
   const [proof, setProof] = useState<Uint8Array | null>(null);
   const [shouldRestartWorker, setShouldRestartWorker] = useState(true);
-  const [workerIsLoaded, setWorkerIsLoaded] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null)
 
   const [initialSizesHorizontal, setInitialSizesHorizontal] = useState([70, 30])
@@ -109,7 +108,6 @@ function App() {
         workerApi.current.setup(navigator.hardwareConcurrency);
       }
       setupWorker();
-      setWorkerIsLoaded(true);
       setShouldRestartWorker(false);
     }
   }, [shouldRestartWorker]);
@@ -169,18 +167,16 @@ function App() {
       await cb();
     }
     catch (e: any) {
-      if (!workerIsLoaded || e.message === "Cannot read properties of undefined (reading 'config')") {
+      if (shouldRestartWorker || e.message === "Cannot read properties of undefined (reading 'config')") {
         appendError("Please wait. Still loading halo2-wasm.");
       }
       else if (e.message === "unreachable") {
         setShouldRestartWorker(true);
-        setWorkerIsLoaded(false);
         workerApi.current = undefined;
         appendError("halo2-wasm error: please check developer console for more information.")
       }
       else {
         setShouldRestartWorker(true);
-        setWorkerIsLoaded(false);
         workerApi.current = undefined;
         appendError(e.message);
       }
