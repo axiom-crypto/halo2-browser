@@ -101,16 +101,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const setupWorker = async () => {
-      const worker = new Worker(new URL("./worker", import.meta.url));
-      const Halo2Circuit = wrap<typeof Halo2Repl>(worker);
-      workerApi.current = await new Halo2Circuit();
-      workerApi.current.setup(navigator.hardwareConcurrency);
-    }
-    setupWorker();
-  }, []);
-
-  useEffect(() => {
     if (shouldRestartWorker) {
       const setupWorker = async () => {
         const worker = new Worker(new URL("./worker", import.meta.url));
