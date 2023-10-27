@@ -1,25 +1,30 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use halo2_base::gates::circuit::builder::BaseCircuitBuilder;
-use halo2_base::gates::flex_gate::{GateChip, GateInstructions};
-use halo2_base::gates::range::{RangeChip, RangeInstructions};
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-use halo2_base::halo2_proofs::halo2curves::group::ff::PrimeField;
-// use halo2_base::halo2_proofs::halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine};
-use halo2_base::halo2_proofs::{
-    arithmetic::CurveAffine,
-    halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine},
+pub use crate::halo2_proofs::halo2curves::{
+    bn256::{Fq as Bn254Fq, Fr as Bn254Fr, G1Affine as Bn254G1Affine},
+    secp256k1::{Fp as Secp256k1Fp, Fq as Secp256k1Fq, Secp256k1Affine},
 };
-use halo2_base::poseidon::hasher::spec::OptimizedPoseidonSpec;
-use halo2_base::poseidon::hasher::PoseidonHasher;
-use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
-use halo2_base::AssignedValue;
-use halo2_base::QuantumCell::Existing;
-use halo2_ecc::ecc::ecdsa::ecdsa_verify_no_pubkey_check;
-use halo2_ecc::ecc::EccChip;
-use halo2_ecc::fields::FieldChip;
-use halo2_ecc::secp256k1::{FpChip, FqChip};
+use halo2_base::{
+    gates::{
+        circuit::builder::BaseCircuitBuilder,
+        flex_gate::{GateChip, GateInstructions},
+        range::{RangeChip, RangeInstructions},
+    },
+    halo2_proofs::{arithmetic::CurveAffine, halo2curves::ff::PrimeField},
+    poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
+    utils::{biguint_to_fe, fe_to_biguint, modulus},
+    AssignedValue,
+    QuantumCell::Existing,
+};
+pub use halo2_ecc::{
+    bn254::{Fp12Chip as Bn254Fq12Chip, Fp2Chip as Bn254Fq2Chip, FpChip as Bn254FqChip},
+    secp256k1::{FpChip as Secp256k1FpChip, FqChip as Secp256k1FqChip},
+};
+use halo2_ecc::{
+    ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
+    fields::FieldChip,
+};
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
 
@@ -30,6 +35,7 @@ const RATE: usize = 2;
 const R_F: usize = 8;
 const R_P: usize = 57;
 const SECURE_MDS: usize = 0;
+type Fr = Bn254Fr;
 
 #[wasm_bindgen]
 pub struct Halo2LibWasm {
@@ -370,20 +376,20 @@ impl Halo2LibWasm {
         let x = r_point.x();
         let x_bigint = fe_to_biguint(x);
 
-        let r = biguint_to_fe::<Fq>(&(x_bigint % modulus::<Fq>()));
+        let r = biguint_to_fe::<Secp256k1Fq>(&(x_bigint % modulus::<Secp256k1Fq>()));
         let s = k_inv * (msg_hash + (r * sk));
 
-        let fp_chip = FpChip::<Fr>::new(&self.range, 88, 3);
-        let fq_chip = FqChip::<Fr>::new(&self.range, 88, 3);
+        let fp_chip = Secp256k1FpChip::<Fr>::new(&self.range, 88, 3);
+        let fq_chip = Secp256k1FqChip::<Fr>::new(&self.range, 88, 3);
 
         let [m, r, s] =
             [msg_hash, r, s].map(|x| fq_chip.load_private(self.builder.borrow_mut().main(0), x));
 
-        let ecc_chip = EccChip::<Fr, FpChip<Fr>>::new(&fp_chip);
+        let ecc_chip = EccChip::<Fr, Secp256k1FpChip<Fr>>::new(&fp_chip);
         let pk = ecc_chip
             .load_private_unchecked(self.builder.borrow_mut().main(0), (pubkey.x, pubkey.y));
 
-        let res = ecdsa_verify_no_pubkey_check::<Fr, Fp, Fq, Secp256k1Affine>(
+        let res = ecdsa_verify_no_pubkey_check::<Fr, Secp256k1Fp, Secp256k1Fq, Secp256k1Affine>(
             &ecc_chip,
             self.builder.borrow_mut().main(0),
             pk,
