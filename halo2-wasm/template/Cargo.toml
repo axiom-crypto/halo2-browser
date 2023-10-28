@@ -18,3 +18,6 @@ halo2-wasm = { git = "https://github.com/axiom-crypto/halo2-wasm.git", default-f
 [features]
 default=["rayon"]
 rayon=["halo2-wasm/rayon"]
+
+# don't remove. needed to make ./build.sh work
+[workspace]
