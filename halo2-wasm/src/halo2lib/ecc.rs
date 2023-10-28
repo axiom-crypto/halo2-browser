@@ -2,7 +2,9 @@ use halo2_base::{
     utils::{BigPrimeField, ScalarField},
     QuantumCell::Constant,
 };
-use halo2_ecc::{bigint::ProperCrtUint, ecc::EcPoint, fields::vector::FieldVector};
+use halo2_ecc::{
+    bigint::ProperCrtUint, bn254::pairing::PairingChip, ecc::EcPoint, fields::vector::FieldVector,
+};
 use num_bigint::BigUint;
 use num_traits::One;
 use serde::{Deserialize, Serialize};
@@ -101,19 +103,39 @@ impl Halo2LibWasm {
     /// Takes in CircuitValue256 in hi-lo form and loads internal CircuitBn254Fq type (we use 3 limbs of 88 bits).
     /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
     pub fn unsafe_load_bn254_fq(&self, hi: CircuitValue, lo: CircuitValue) -> Bn254FqPoint {
-        // easiest to just construct the raw bigint, load it as witness, and then constrain against provided circuit value
-        let [hi, lo] = [hi, lo].map(|x| self.get_assigned_value(x));
-        let [hi_val, lo_val] = [hi, lo].map(|x| fe_to_biguint(x.value()));
-        let fq = (hi_val << 128) + lo_val;
-        assert!(fq < modulus::<Bn254Fq>());
-        let fq = biguint_to_fe::<Bn254Fq>(&fq);
         let fq_chip = self.bn254_fq_chip();
+        self.unsafe_load_bn254_fq_impl(&fq_chip, hi, lo)
+    }
+    /// Doesn't range check limbs of g1_point
+    pub fn unsafe_load_bn254_g1(&self, point: CircuitBn254G1Affine) -> Bn254G1AffinePoint {
+        let fq_chip = self.bn254_fq_chip();
+        let g1_chip = EccChip::new(&fq_chip);
+        self.unsafe_load_bn254_g1_impl(&g1_chip, point)
+    }
+    /// `g1_points` should be array of `CircuitBn254G1Affine` in hi-lo form.
+    /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
+    pub fn unsafe_bn254_g1_sum(&self, g1_points: js_sys::Array) -> Bn254G1AffinePoint {
+        let fq_chip = self.bn254_fq_chip();
+        let g1_chip = EccChip::new(&fq_chip);
+        let g1_points: Vec<CircuitBn254G1Affine> = g1_points
+            .iter()
+            .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
+            .collect();
         let mut builder = self.builder.borrow_mut();
         let ctx = builder.main(0);
-        let fq = fq_chip.load_private(ctx, fq);
-        // constrain fq actually equals hi << 128 + lo
-        constrain_limbs_equality(ctx, &self.range, [hi, lo], fq.limbs(), fq_chip.limb_bits());
-        Bn254FqPoint(fq)
+        let g1_points: Vec<_> = g1_points
+            .into_iter()
+            .map(|point| self.unsafe_load_bn254_g1_impl(&g1_chip, point).0)
+            .collect();
+        let sum = g1_chip.sum::<Bn254G1Affine>(ctx, g1_points);
+        Bn254G1AffinePoint(sum)
+    }
+    /// Doesn't range check limbs of g2_point
+    pub fn unsafe_load_bn254_g2(&self, point: CircuitBn254G2Affine) -> Bn254G2AffinePoint {
+        let fq_chip = self.bn254_fq_chip();
+        let fq2_chip = Bn254Fq2Chip::new(&fq_chip);
+        let g2_chip = EccChip::new(&fq2_chip);
+        self.unsafe_load_bn254_g2_impl(&g2_chip, point)
     }
     /// `g2_points` should be array of `CircuitBn254G2Affine` in hi-lo form.
     /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
@@ -129,45 +151,88 @@ impl Halo2LibWasm {
         let ctx = builder.main(0);
         let g2_points: Vec<_> = g2_points
             .into_iter()
-            .map(|point| {
-                let [x, y] = [point.x, point.y].map(|c| {
-                    let c0 = self.unsafe_load_bn254_fq(c.c0.hi, c.c0.lo);
-                    let c1 = self.unsafe_load_bn254_fq(c.c1.hi, c.c1.lo);
-                    FieldVector(vec![c0.0, c1.0])
-                });
-                let pt = EcPoint::new(x, y);
-                g2_chip.assert_is_on_curve::<Bn254G2Affine>(ctx, &pt);
-                pt
-            })
+            .map(|point| self.unsafe_load_bn254_g2_impl(&g2_chip, point).0)
             .collect();
         let sum = g2_chip.sum::<Bn254G2Affine>(ctx, g2_points);
         Bn254G2AffinePoint(sum)
     }
-    /// `g1_points` should be array of `CircuitBn254G1Affine` in hi-lo form.
-    /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
-    pub fn unsafe_bn254_g1_sum(&self, g1_points: js_sys::Array) -> Bn254G1AffinePoint {
+    /// Verifies that e(lhs_1, rhs_1) = e(lhs_2, rhs_2) by checking e(lhs_1, rhs_1)*e(-lhs_2, rhs_2) === 1
+    pub fn bn254_pairing_check(
+        &self,
+        lhs_1: Bn254G1AffinePoint,
+        rhs_1: Bn254G2AffinePoint,
+        lhs_2: Bn254G1AffinePoint,
+        rhs_2: Bn254G2AffinePoint,
+    ) -> CircuitValue {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
-        let g1_points: Vec<CircuitBn254G1Affine> = g1_points
-            .iter()
-            .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
-            .collect();
         let mut builder = self.builder.borrow_mut();
         let ctx = builder.main(0);
-        let g1_points: Vec<_> = g1_points
-            .into_iter()
-            .map(|point| {
-                let [x, y] = [point.x, point.y].map(|c| {
-                    let c = self.unsafe_load_bn254_fq(c.hi, c.lo);
-                    c.0
-                });
-                let pt = EcPoint::new(x, y);
-                g1_chip.assert_is_on_curve::<Bn254G1Affine>(ctx, &pt);
-                pt
-            })
-            .collect();
-        let sum = g1_chip.sum::<Bn254G1Affine>(ctx, g1_points);
-        Bn254G1AffinePoint(sum)
+        let neg_lhs_2 = g1_chip.negate(ctx, lhs_2.0);
+        let pairing_chip = PairingChip::new(&fq_chip);
+
+        let multi_paired =
+            pairing_chip.multi_miller_loop(ctx, vec![(&lhs_1.0, &rhs_1.0), (&neg_lhs_2, &rhs_2.0)]);
+        let fq12_chip = Bn254Fq12Chip::new(&fq_chip);
+        let result = fq12_chip.final_exp(ctx, multi_paired);
+        let fq12_one = fq12_chip.load_constant(ctx, Bn254Fq12::one());
+        let verification_result = fq12_chip.is_equal(ctx, result, fq12_one);
+        self.to_js_assigned_value(verification_result)
+    }
+
+    // private implementations to save recreating chips each time:
+    fn unsafe_load_bn254_fq_impl(
+        &self,
+        fq_chip: &Bn254FqChip<Fr>,
+        hi: CircuitValue,
+        lo: CircuitValue,
+    ) -> Bn254FqPoint {
+        // easiest to just construct the raw bigint, load it as witness, and then constrain against provided circuit value
+        let [hi, lo] = [hi, lo].map(|x| self.get_assigned_value(x));
+        let [hi_val, lo_val] = [hi, lo].map(|x| fe_to_biguint(x.value()));
+        let fq = (hi_val << 128) + lo_val;
+        assert!(fq < modulus::<Bn254Fq>());
+        let fq = biguint_to_fe::<Bn254Fq>(&fq);
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
+        let fq = fq_chip.load_private(ctx, fq);
+        // constrain fq actually equals hi << 128 + lo
+        constrain_limbs_equality(ctx, &self.range, [hi, lo], fq.limbs(), fq_chip.limb_bits());
+        Bn254FqPoint(fq)
+    }
+    /// Doesn't range check limbs of g2_point
+    fn unsafe_load_bn254_g1_impl(
+        &self,
+        g1_chip: &EccChip<Fr, Bn254FqChip<Fr>>,
+        point: CircuitBn254G1Affine,
+    ) -> Bn254G1AffinePoint {
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
+        let [x, y] = [point.x, point.y].map(|c| {
+            let c = self.unsafe_load_bn254_fq_impl(g1_chip.field_chip(), c.hi, c.lo);
+            c.0
+        });
+        let pt = EcPoint::new(x, y);
+        g1_chip.assert_is_on_curve::<Bn254G1Affine>(ctx, &pt);
+        Bn254G1AffinePoint(pt)
+    }
+    /// Doesn't range check limbs of g2_point
+    fn unsafe_load_bn254_g2_impl(
+        &self,
+        g2_chip: &EccChip<Fr, Bn254Fq2Chip<Fr>>,
+        point: CircuitBn254G2Affine,
+    ) -> Bn254G2AffinePoint {
+        let fq_chip = g2_chip.field_chip().fp_chip();
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
+        let [x, y] = [point.x, point.y].map(|c| {
+            let c0 = self.unsafe_load_bn254_fq_impl(fq_chip, c.c0.hi, c.c0.lo);
+            let c1 = self.unsafe_load_bn254_fq_impl(fq_chip, c.c1.hi, c.c1.lo);
+            FieldVector(vec![c0.0, c1.0])
+        });
+        let pt = EcPoint::new(x, y);
+        g2_chip.assert_is_on_curve::<Bn254G2Affine>(ctx, &pt);
+        Bn254G2AffinePoint(pt)
     }
 }
 

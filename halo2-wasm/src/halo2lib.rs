@@ -2,7 +2,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 pub use crate::halo2_proofs::halo2curves::{
-    bn256::{Fq as Bn254Fq, Fr as Bn254Fr, G1Affine as Bn254G1Affine, G2Affine as Bn254G2Affine},
+    bn256::{
+        Fq as Bn254Fq, Fq12 as Bn254Fq12, Fq2 as Bn254Fq2, Fr as Bn254Fr,
+        G1Affine as Bn254G1Affine, G2Affine as Bn254G2Affine,
+    },
     secp256k1::{Fp as Secp256k1Fp, Fq as Secp256k1Fq, Secp256k1Affine},
 };
 use halo2_base::Context;
