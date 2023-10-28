@@ -91,10 +91,8 @@ pub struct Halo2Wasm {
     vk: Option<VerifyingKey<G1Affine>>,
 }
 
-#[wasm_bindgen]
-impl Halo2Wasm {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+impl Default for Halo2Wasm {
+    fn default() -> Self {
         let circuit = BaseCircuitBuilder::new(false);
         Halo2Wasm {
             circuit: Rc::new(RefCell::new(circuit)),
@@ -104,6 +102,14 @@ impl Halo2Wasm {
             pk: None,
             vk: None,
         }
+    }
+}
+
+#[wasm_bindgen]
+impl Halo2Wasm {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn clear(&mut self) {
@@ -333,6 +339,7 @@ impl Halo2Wasm {
         snark.proof
     }
 
+    /// For console logging only.
     pub unsafe fn log(&self, a: String) {
         console_log!("{}", a);
     }
