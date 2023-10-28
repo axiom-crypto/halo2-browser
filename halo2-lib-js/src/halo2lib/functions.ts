@@ -27,7 +27,7 @@ export class Halo2Lib {
         return maxPaddedNumBits.toString()
     }
 
-    private getPaddedNumBits(numBits: string) {
+    private getValidatedNumBits(numBits: string) {
         if(Number(numBits) > Number(this._MAX_BITS)) throw new Error(`Number of bits must be less than ${this._MAX_BITS}`);
         return numBits;
     }
@@ -286,7 +286,7 @@ export class Halo2Lib {
     checkLessThan = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS) => {
         this.rangeCheck(a, convertInput(c));
         this.rangeCheck(b, convertInput(c));
-        this. _halo2lib.check_less_than(a.cell(), b.cell(), this.getPaddedNumBits(c));
+        this. _halo2lib.check_less_than(a.cell(), b.cell(), this.getValidatedNumBits(c));
     }
 
     /**
@@ -300,7 +300,7 @@ export class Halo2Lib {
     isLessThan = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS) => {
         this.rangeCheck(a, convertInput(c));
         this.rangeCheck(b, convertInput(c));
-        return this.Cell(this. _halo2lib.is_less_than(a.cell(), b.cell(), this.getPaddedNumBits(c)));
+        return this.Cell(this. _halo2lib.is_less_than(a.cell(), b.cell(), this.getValidatedNumBits(c)));
     }
 
     /**

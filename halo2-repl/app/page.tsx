@@ -33,6 +33,7 @@ function App() {
   const router = useRouter();
   const [circuitVk, setCircuitVk] = useState<Uint8Array | null>(null);
   const [proof, setProof] = useState<Uint8Array | null>(null);
+  const [shouldRestartWorker, setShouldRestartWorker] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null)
 
   const [initialSizesHorizontal, setInitialSizesHorizontal] = useState([70, 30])
@@ -99,14 +100,17 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const setupWorker = async () => {
-      const worker = new Worker(new URL("./worker", import.meta.url));
-      const Halo2Circuit = wrap<typeof Halo2Repl>(worker);
-      workerApi.current = await new Halo2Circuit();
-      workerApi.current.setup(navigator.hardwareConcurrency);
+    if (shouldRestartWorker) {
+      const setupWorker = async () => {
+        const worker = new Worker(new URL("./worker", import.meta.url));
+        const Halo2Circuit = wrap<typeof Halo2Repl>(worker);
+        workerApi.current = await new Halo2Circuit();
+        workerApi.current.setup(navigator.hardwareConcurrency);
+      }
+      setupWorker();
+      setShouldRestartWorker(false);
     }
-    setupWorker();
-  }, []);
+  }, [shouldRestartWorker]);
 
   const getGithubAccessToken = async () => {
     const code = searchParams.get("code");
@@ -163,22 +167,20 @@ function App() {
       await cb();
     }
     catch (e: any) {
-      if (e.message === "unreachable") {
+      if (shouldRestartWorker || e.message === "Cannot read properties of undefined (reading 'config')") {
+        appendError("Please wait. Still loading halo2-wasm.");
+      }
+      else if (e.message === "unreachable") {
+        setShouldRestartWorker(true);
+        workerApi.current = undefined;
         appendError("halo2-wasm error: please check developer console for more information.")
       }
-      else if (e.message === "Cannot read properties of undefined (reading 'halo2wasm_new')") {
-        appendLogs("Please wait. Still loading halo2-wasm.")
-      }
-      else if (e.message === "Cannot read properties of undefined (reading 'prove_snark')") {
-        appendError("Must run key generation before proof generation.")
-      }
-      else if (e.message === "undefined is not an object (evaluating 'this.halo2wasm.config')") {
-        appendLogs("Please wait. Still loading halo2-wasm.")
-      }
       else {
+        setShouldRestartWorker(true);
+        workerApi.current = undefined;
         appendError(e.message);
       }
-
+      console.error(e);
     }
     await workerApi.current?.stopConsoleCapture();
   }
