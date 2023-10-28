@@ -1,4 +1,4 @@
-use std::cell::{OnceCell, RefCell};
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub use crate::halo2_proofs::halo2curves::{
@@ -47,7 +47,6 @@ type CircuitValue256 = (CircuitValue, CircuitValue);
 pub struct Halo2LibWasm {
     gate: GateChip<Fr>,
     range: RangeChip<Fr>,
-    bn254_fq_chip: OnceCell<Bn254FqChip<'static, Fr>>,
     builder: Rc<RefCell<BaseCircuitBuilder<Fr>>>,
 }
 
@@ -64,7 +63,6 @@ impl Halo2LibWasm {
         Halo2LibWasm {
             gate,
             range,
-            bn254_fq_chip: OnceCell::new(),
             builder: Rc::clone(&circuit.circuit),
         }
     }
