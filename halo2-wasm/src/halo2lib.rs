@@ -40,8 +40,7 @@ const R_P: usize = 57;
 const SECURE_MDS: usize = 0;
 type Fr = Bn254Fr;
 // TODO: use wasm_bindgen to sync with js CircuitValue type
-type CircuitValue = usize;
-type CircuitValue256 = (CircuitValue, CircuitValue);
+type JsCircuitValue = usize;
 
 #[wasm_bindgen]
 pub struct Halo2LibWasm {

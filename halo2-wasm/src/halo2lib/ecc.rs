@@ -22,10 +22,10 @@ impl Bn254FqPoint {
     fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
         convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
         let [hi, lo] = self.to_hi_lo(lib_wasm);
         let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
-        CircuitValue256 { hi, lo }
+        JsCircuitValue256 { hi, lo }
     }
 }
 
@@ -52,10 +52,10 @@ impl Secp256k1FpPoint {
     fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
         convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
         let [hi, lo] = self.to_hi_lo(lib_wasm);
         let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
-        CircuitValue256 { hi, lo }
+        JsCircuitValue256 { hi, lo }
     }
 }
 
@@ -69,47 +69,47 @@ impl Secp256k1FqPoint {
     fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
         convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
         let [hi, lo] = self.to_hi_lo(lib_wasm);
         let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
-        CircuitValue256 { hi, lo }
+        JsCircuitValue256 { hi, lo }
     }
 }
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CircuitValue256 {
-    pub hi: CircuitValue,
-    pub lo: CircuitValue,
+pub struct JsCircuitValue256 {
+    pub hi: JsCircuitValue,
+    pub lo: JsCircuitValue,
 }
 
 // following notation of https://github.com/paulmillr/noble-curves/tree/main
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CircuitBn254Fq2 {
-    pub c0: CircuitValue256,
-    pub c1: CircuitValue256,
+pub struct JsCircuitBn254Fq2 {
+    pub c0: JsCircuitValue256,
+    pub c1: JsCircuitValue256,
 }
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CircuitBn254G1Affine {
-    pub x: CircuitValue256,
-    pub y: CircuitValue256,
+pub struct JsCircuitBn254G1Affine {
+    pub x: JsCircuitValue256,
+    pub y: JsCircuitValue256,
 }
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CircuitBn254G2Affine {
-    pub x: CircuitBn254Fq2,
-    pub y: CircuitBn254Fq2,
+pub struct JsCircuitBn254G2Affine {
+    pub x: JsCircuitBn254Fq2,
+    pub y: JsCircuitBn254Fq2,
 }
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct CircuitSecp256k1Affine {
-    pub x: CircuitValue256,
-    pub y: CircuitValue256,
+pub struct JsCircuitSecp256k1Affine {
+    pub x: JsCircuitValue256,
+    pub y: JsCircuitValue256,
 }
 
 #[wasm_bindgen]
@@ -120,7 +120,7 @@ impl Halo2LibWasm {
         let num_limbs = 3;
         Bn254FqChip::<Fr>::new(&self.range, limb_bits, num_limbs)
     }
-    pub fn load_bn254_fq(&self, hi: CircuitValue, lo: CircuitValue) -> Bn254FqPoint {
+    pub fn load_bn254_fq(&self, hi: JsCircuitValue, lo: JsCircuitValue) -> Bn254FqPoint {
         for x in [hi, lo] {
             self.range.range_check(
                 self.builder.borrow_mut().main(0),
@@ -132,12 +132,12 @@ impl Halo2LibWasm {
     }
     /// Takes in CircuitValue256 in hi-lo form and loads internal CircuitBn254Fq type (we use 3 limbs of 88 bits).
     /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
-    pub fn unsafe_load_bn254_fq(&self, hi: CircuitValue, lo: CircuitValue) -> Bn254FqPoint {
+    pub fn unsafe_load_bn254_fq(&self, hi: JsCircuitValue, lo: JsCircuitValue) -> Bn254FqPoint {
         let fq_chip = self.bn254_fq_chip();
         self.unsafe_load_bn254_fq_impl(&fq_chip, hi, lo)
     }
     /// Doesn't range check limbs of g1_point
-    pub fn unsafe_load_bn254_g1(&self, point: CircuitBn254G1Affine) -> Bn254G1AffinePoint {
+    pub fn unsafe_load_bn254_g1(&self, point: JsCircuitBn254G1Affine) -> Bn254G1AffinePoint {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
         self.unsafe_load_bn254_g1_impl(&g1_chip, point)
@@ -147,7 +147,7 @@ impl Halo2LibWasm {
     pub fn unsafe_bn254_g1_sum(&self, g1_points: js_sys::Array) -> Bn254G1AffinePoint {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
-        let g1_points: Vec<CircuitBn254G1Affine> = g1_points
+        let g1_points: Vec<JsCircuitBn254G1Affine> = g1_points
             .iter()
             .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
             .collect();
@@ -161,7 +161,7 @@ impl Halo2LibWasm {
         Bn254G1AffinePoint(sum)
     }
     /// Doesn't range check limbs of g2_point
-    pub fn unsafe_load_bn254_g2(&self, point: CircuitBn254G2Affine) -> Bn254G2AffinePoint {
+    pub fn unsafe_load_bn254_g2(&self, point: JsCircuitBn254G2Affine) -> Bn254G2AffinePoint {
         let fq_chip = self.bn254_fq_chip();
         let fq2_chip = Bn254Fq2Chip::new(&fq_chip);
         let g2_chip = EccChip::new(&fq2_chip);
@@ -173,7 +173,7 @@ impl Halo2LibWasm {
         let fq_chip = self.bn254_fq_chip();
         let fq2_chip = Bn254Fq2Chip::new(&fq_chip);
         let g2_chip = EccChip::new(&fq2_chip);
-        let g2_points: Vec<CircuitBn254G2Affine> = g2_points
+        let g2_points: Vec<JsCircuitBn254G2Affine> = g2_points
             .iter()
             .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
             .collect();
@@ -194,7 +194,7 @@ impl Halo2LibWasm {
         rhs_1: Bn254G2AffinePoint,
         lhs_2: Bn254G1AffinePoint,
         rhs_2: Bn254G2AffinePoint,
-    ) -> CircuitValue {
+    ) -> JsCircuitValue {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
         let mut builder = self.builder.borrow_mut();
@@ -215,8 +215,8 @@ impl Halo2LibWasm {
     fn unsafe_load_bn254_fq_impl(
         &self,
         fq_chip: &Bn254FqChip<Fr>,
-        hi: CircuitValue,
-        lo: CircuitValue,
+        hi: JsCircuitValue,
+        lo: JsCircuitValue,
     ) -> Bn254FqPoint {
         // easiest to just construct the raw bigint, load it as witness, and then constrain against provided circuit value
         let [hi, lo] = [hi, lo].map(|x| self.get_assigned_value(x));
@@ -235,7 +235,7 @@ impl Halo2LibWasm {
     fn unsafe_load_bn254_g1_impl(
         &self,
         g1_chip: &EccChip<Fr, Bn254FqChip<Fr>>,
-        point: CircuitBn254G1Affine,
+        point: JsCircuitBn254G1Affine,
     ) -> Bn254G1AffinePoint {
         let mut builder = self.builder.borrow_mut();
         let ctx = builder.main(0);
@@ -251,7 +251,7 @@ impl Halo2LibWasm {
     fn unsafe_load_bn254_g2_impl(
         &self,
         g2_chip: &EccChip<Fr, Bn254Fq2Chip<Fr>>,
-        point: CircuitBn254G2Affine,
+        point: JsCircuitBn254G2Affine,
     ) -> Bn254G2AffinePoint {
         let fq_chip = g2_chip.field_chip().fp_chip();
         let mut builder = self.builder.borrow_mut();
