@@ -1,10 +1,11 @@
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::rc::Rc;
 
 pub use crate::halo2_proofs::halo2curves::{
-    bn256::{Fq as Bn254Fq, Fr as Bn254Fr, G1Affine as Bn254G1Affine},
+    bn256::{Fq as Bn254Fq, Fr as Bn254Fr, G1Affine as Bn254G1Affine, G2Affine as Bn254G2Affine},
     secp256k1::{Fp as Secp256k1Fp, Fq as Secp256k1Fq, Secp256k1Affine},
 };
+use halo2_base::Context;
 use halo2_base::{
     gates::{
         circuit::builder::BaseCircuitBuilder,
@@ -30,17 +31,23 @@ use wasm_bindgen::prelude::*;
 
 use crate::Halo2Wasm;
 
+pub mod ecc;
+
 const T: usize = 3;
 const RATE: usize = 2;
 const R_F: usize = 8;
 const R_P: usize = 57;
 const SECURE_MDS: usize = 0;
 type Fr = Bn254Fr;
+// TODO: use wasm_bindgen to sync with js CircuitValue type
+type CircuitValue = usize;
+type CircuitValue256 = (CircuitValue, CircuitValue);
 
 #[wasm_bindgen]
 pub struct Halo2LibWasm {
     gate: GateChip<Fr>,
     range: RangeChip<Fr>,
+    bn254_fq_chip: OnceCell<Bn254FqChip<'static, Fr>>,
     builder: Rc<RefCell<BaseCircuitBuilder<Fr>>>,
 }
 
@@ -57,6 +64,7 @@ impl Halo2LibWasm {
         Halo2LibWasm {
             gate,
             range,
+            bn254_fq_chip: OnceCell::new(),
             builder: Rc::clone(&circuit.circuit),
         }
     }
@@ -72,14 +80,15 @@ impl Halo2LibWasm {
         self.range = range;
     }
 
-    fn get_assigned_value(&mut self, idx: usize) -> AssignedValue<Fr> {
-        self.builder
-            .borrow_mut()
-            .main(0)
-            .get(idx.try_into().unwrap())
+    fn get_assigned_value(&self, idx: usize) -> AssignedValue<Fr> {
+        self.builder.borrow().core().phase_manager[0]
+            .threads
+            .last()
+            .unwrap()
+            .get(idx as isize)
     }
 
-    fn get_assigned_values(&mut self, a: &[u32]) -> Vec<AssignedValue<Fr>> {
+    fn get_assigned_values(&self, a: &[u32]) -> Vec<AssignedValue<Fr>> {
         a.iter()
             .map(|x| self.get_assigned_value(*x as usize))
             .collect()
@@ -283,7 +292,7 @@ impl Halo2LibWasm {
         self.builder.borrow_mut().main(0).constrain_equal(&a, &b);
     }
 
-    pub fn range_check(&mut self, a: usize, b: &str) {
+    pub fn range_check(&self, a: usize, b: &str) {
         let a = self.get_assigned_value(a);
         let b: usize = b.parse().unwrap();
         self.range
