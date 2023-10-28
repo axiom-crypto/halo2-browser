@@ -1,7 +1,4 @@
-use halo2_base::{
-    utils::{BigPrimeField, ScalarField},
-    QuantumCell::Constant,
-};
+use halo2_base::{utils::BigPrimeField, QuantumCell::Constant};
 use halo2_ecc::{
     bigint::ProperCrtUint, bn254::pairing::PairingChip, ecc::EcPoint, fields::vector::FieldVector,
 };
@@ -20,6 +17,17 @@ type FqPoint = ProperCrtUint<Fr>;
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254FqPoint(ProperCrtUint<Fr>);
+#[wasm_bindgen]
+impl Bn254FqPoint {
+    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    }
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+        CircuitValue256 { hi, lo }
+    }
+}
 
 type Fq2Point = FieldVector<FqPoint>;
 #[wasm_bindgen]
@@ -39,12 +47,34 @@ pub struct Bn254G2AffinePoint(EcPoint<Fr, Fq2Point>);
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Secp256k1FpPoint(ProperCrtUint<Fr>);
+#[wasm_bindgen]
+impl Secp256k1FpPoint {
+    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    }
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+        CircuitValue256 { hi, lo }
+    }
+}
 
 /// We use 3 limbs with 88 bits each.
 /// NOT constrained to be less than the prime.
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Secp256k1FqPoint(ProperCrtUint<Fr>);
+#[wasm_bindgen]
+impl Secp256k1FqPoint {
+    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    }
+    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> CircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+        CircuitValue256 { hi, lo }
+    }
+}
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -157,6 +187,7 @@ impl Halo2LibWasm {
         Bn254G2AffinePoint(sum)
     }
     /// Verifies that e(lhs_1, rhs_1) = e(lhs_2, rhs_2) by checking e(lhs_1, rhs_1)*e(-lhs_2, rhs_2) === 1
+    /// Returns [CircuitValue] for the result as a boolean (1 if signature verification is successful).
     pub fn bn254_pairing_check(
         &self,
         lhs_1: Bn254G1AffinePoint,
@@ -256,4 +287,23 @@ fn constrain_limbs_equality<F: BigPrimeField>(
     for (l0, l1) in limbs.iter().zip_eq([limb0, limb1, limb2]) {
         ctx.constrain_equal(l0, &l1);
     }
+}
+
+fn convert_3limbs88bits_to_hi_lo(
+    lib_wasm: &Halo2LibWasm,
+    limbs: &[AssignedValue<Fr>],
+) -> [AssignedValue<Fr>; 2] {
+    assert_eq!(limbs.len(), 3);
+    let lo_bits = 128 - 88;
+    let hi_bits = 88 - lo_bits;
+    let mut builder = lib_wasm.builder.borrow_mut();
+    let range = &lib_wasm.range;
+    let gate = &range.gate;
+    let ctx = builder.main(0);
+    let (limb1_lo, limb1_hi) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);
+    let multiplier = biguint_to_fe(&(BigUint::one() << 88));
+    let lo = gate.mul_add(ctx, limb1_lo, Constant(multiplier), limbs[0]);
+    let multiplier = biguint_to_fe(&(BigUint::one() << hi_bits));
+    let hi = gate.mul_add(ctx, limbs[2], Constant(multiplier), limb1_hi);
+    [hi, lo]
 }
