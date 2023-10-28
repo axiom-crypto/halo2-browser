@@ -8,7 +8,6 @@ pub use crate::halo2_proofs::halo2curves::{
     },
     secp256k1::{Fp as Secp256k1Fp, Fq as Secp256k1Fq, Secp256k1Affine},
 };
-use halo2_base::Context;
 use halo2_base::{
     gates::{
         circuit::builder::BaseCircuitBuilder,
@@ -18,16 +17,14 @@ use halo2_base::{
     halo2_proofs::{arithmetic::CurveAffine, halo2curves::ff::PrimeField},
     poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
     utils::{biguint_to_fe, fe_to_biguint, modulus},
-    AssignedValue,
+    AssignedValue, Context,
     QuantumCell::Existing,
 };
 pub use halo2_ecc::{
     bn254::{Fp12Chip as Bn254Fq12Chip, Fp2Chip as Bn254Fq2Chip, FpChip as Bn254FqChip},
-    secp256k1::{FpChip as Secp256k1FpChip, FqChip as Secp256k1FqChip},
-};
-use halo2_ecc::{
     ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
     fields::FieldChip,
+    secp256k1::{FpChip as Secp256k1FpChip, FqChip as Secp256k1FqChip},
 };
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
