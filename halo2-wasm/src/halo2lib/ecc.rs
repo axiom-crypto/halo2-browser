@@ -10,16 +10,23 @@ use wasm_bindgen::prelude::*;
 
 use super::*;
 
+// We do not allow JS access to the internals of field elements and ec points because Rust types do not allow you to construct them from the internal pieces for safety.
+
+type FqPoint = ProperCrtUint<Fr>;
 /// We use 3 limbs with 88 bits each.
 /// NOT constrained to be less than the prime.
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254FqPoint(ProperCrtUint<Fr>);
 
-type Fq2Point = FieldVector<ProperCrtUint<Fr>>;
+type Fq2Point = FieldVector<FqPoint>;
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254Fq2Point(Fq2Point);
+
+#[wasm_bindgen]
+#[derive(Clone, Debug)]
+pub struct Bn254G1AffinePoint(EcPoint<Fr, FqPoint>);
 
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
@@ -108,7 +115,7 @@ impl Halo2LibWasm {
         constrain_limbs_equality(ctx, &self.range, [hi, lo], fq.limbs(), fq_chip.limb_bits());
         Bn254FqPoint(fq)
     }
-    /// `g2_points` should be array of `CircuitValue256` in hi-lo form.
+    /// `g2_points` should be array of `CircuitBn254G2Affine` in hi-lo form.
     /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
     pub fn unsafe_bn254_g2_sum(&self, g2_points: js_sys::Array) -> Bn254G2AffinePoint {
         let fq_chip = self.bn254_fq_chip();
@@ -135,6 +142,32 @@ impl Halo2LibWasm {
             .collect();
         let sum = g2_chip.sum::<Bn254G2Affine>(ctx, g2_points);
         Bn254G2AffinePoint(sum)
+    }
+    /// `g1_points` should be array of `CircuitBn254G1Affine` in hi-lo form.
+    /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere.
+    pub fn unsafe_bn254_g1_sum(&self, g1_points: js_sys::Array) -> Bn254G1AffinePoint {
+        let fq_chip = self.bn254_fq_chip();
+        let g1_chip = EccChip::new(&fq_chip);
+        let g1_points: Vec<CircuitBn254G1Affine> = g1_points
+            .iter()
+            .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
+            .collect();
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
+        let g1_points: Vec<_> = g1_points
+            .into_iter()
+            .map(|point| {
+                let [x, y] = [point.x, point.y].map(|c| {
+                    let c = self.unsafe_load_bn254_fq(c.hi, c.lo);
+                    c.0
+                });
+                let pt = EcPoint::new(x, y);
+                g1_chip.assert_is_on_curve::<Bn254G1Affine>(ctx, &pt);
+                pt
+            })
+            .collect();
+        let sum = g1_chip.sum::<Bn254G1Affine>(ctx, g1_points);
+        Bn254G1AffinePoint(sum)
     }
 }
 
