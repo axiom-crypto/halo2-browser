@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-wasm-bindgen =  { version = "0.2.87", features = ["serde-serialize"] }
+wasm-bindgen =  { version = "0.2.87" }
 
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", package = "halo2-base", branch="develop", features = [
     "halo2-axiom",
