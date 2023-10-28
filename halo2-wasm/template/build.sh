@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-rm -r pkg
+rm -rf pkg
 
 TARGET=$1
 
