@@ -335,10 +335,12 @@ impl Halo2LibWasm {
         let a_val = a.value();
         let a_bytes = a_val.to_bytes();
 
-        let a0_bytes: &[u8; 32] = &a_bytes[..16].try_into().unwrap();
-        let a1_bytes: &[u8; 32] = &a_bytes[16..].try_into().unwrap();
-        let a0 = Fr::from_bytes(a0_bytes).unwrap();
-        let a1 = Fr::from_bytes(a1_bytes).unwrap();
+        let mut a0_bytes = [0u8; 32];
+        let mut a1_bytes = [0u8; 32];
+        a0_bytes[..16].copy_from_slice(&a_bytes[..16]);
+        a1_bytes[..16].copy_from_slice(&a_bytes[16..]);
+        let a0 = Fr::from_bytes(&a0_bytes).unwrap();
+        let a1 = Fr::from_bytes(&a1_bytes).unwrap();
 
         let a0 = self.builder.borrow_mut().main(0).load_witness(a0);
         let a1 = self.builder.borrow_mut().main(0).load_witness(a1);
