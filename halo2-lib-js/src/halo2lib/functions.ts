@@ -2,6 +2,7 @@ import { Halo2LibWasm, Halo2Wasm } from "@axiom-crypto/halo2-wasm/web";
 import { convertInput, joinArrays } from "../shared/utils";
 import { CircuitValue } from "./CircuitValue";
 import { RawCircuitInput } from "../shared/types";
+import {JsCircuitBn254G1Affine, JsCircuitValue256} from "@axiom-crypto/halo2-wasm/web";
 
 export class Halo2Lib {
 
@@ -239,6 +240,35 @@ export class Halo2Lib {
     isZero = (a: CircuitValue) => this.Cell(this. _halo2lib.is_zero(a.cell()));
 
     /**
+     * Selects circuit values from an array based on an indicator circuit value.
+     *
+     * @param points - The array of circuit values in high,low form of each coordinate of G1 points.
+     * [G1point1, G1point2, G1point3 ... ] and each Gpoint i.e [x,y] and each x and y will be [hi, lo]
+     * @returns The sum of all these points.
+     */
+
+    bn254G1Sum = (points: Array<Array<Array<bigint>>>) => {
+        // Convert to JsCircuitBn254G1Affine
+        let jsCircuitBn254G1AffineArray: JsCircuitBn254G1Affine[] = [];
+        for(let i=0; i<points.length; i++){
+            let newJsCircuitValue256X = new JsCircuitValue256();
+            let newJsCircuitValue256Y = new JsCircuitValue256();
+            newJsCircuitValue256X.hi = this._halo2lib.constant(points[i][0][0].toString());
+            newJsCircuitValue256X.lo = this._halo2lib.constant(points[i][0][1].toString());
+
+            newJsCircuitValue256Y.hi = this._halo2lib.constant(points[i][1][0].toString());
+            newJsCircuitValue256Y.lo = this._halo2lib.constant(points[i][1][1].toString());
+            let newJsCircuitBn254G1Affine = new JsCircuitBn254G1Affine();
+            newJsCircuitBn254G1Affine.x = newJsCircuitValue256X;
+            newJsCircuitBn254G1Affine.y = newJsCircuitValue256Y;
+            jsCircuitBn254G1AffineArray.push(newJsCircuitBn254G1Affine);
+        }
+
+        this.Cell(this._halo2lib.bn254_g1_sum(jsCircuitBn254G1AffineArray)); // gotta fix this rep
+    };
+
+
+    /**
      * Checks if two circuit values are equal.
      *
      * @param a - The first circuit value.
@@ -305,12 +335,12 @@ export class Halo2Lib {
 
     /**
      * Divides two circuit values and returns the quotient.
-     * 
+     *
      * @param a - The dividend circuit value.
      * @param b - The divisor circuit value.
      * @returns The quotient.
-     * 
-    */
+     *
+     */
     div = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS, d: string = this._MAX_BITS) => {
         if (this._firstPass) {
             b = this.constant(1);
@@ -321,12 +351,12 @@ export class Halo2Lib {
 
     /**
      * Divides two circuit values and returns the remainder.
-     * 
+     *
      * @param a - The dividend circuit value.
      * @param b - The divisor circuit value.
      * @returns The remainder.
-     * 
-    */
+     *
+     */
     mod = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS, d: string = this._MAX_BITS) => {
         const [_, remainder] = this. _halo2lib.div_mod_var(a.cell(), b.cell(), c, d)
         return this.Cell(remainder);
