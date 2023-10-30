@@ -56,6 +56,22 @@ pub struct Bn254Fq2Point(Fq2Point);
 pub struct Bn254G1AffinePoint(EcPoint<Fr, FqPoint>);
 
 #[wasm_bindgen]
+impl Bn254G1AffinePoint {
+    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [[AssignedValue<Fr>; 2] ;2] {
+        [convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.x.limbs()),
+            convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.y.limbs())]
+    }
+    pub fn to_circuit_values_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitBn254G1Affine {
+        let [x, y] = self.to_hi_lo(lib_wasm);
+        let [x_hi, x_lo] = x.map(|_x| lib_wasm.to_js_assigned_value(_x));
+        let [y_hi, y_lo] = y.map(|_y| lib_wasm.to_js_assigned_value(_y));
+        let js_circuit_bn254_g1_affine_point = JsCircuitBn254G1Affine{x: JsCircuitValue256{hi: x_hi, lo: x_lo},
+            y: JsCircuitValue256{hi: y_hi, lo: y_lo}};
+        js_circuit_bn254_g1_affine_point
+    }
+}
+
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254G2AffinePoint(EcPoint<Fr, Fq2Point>);
 
