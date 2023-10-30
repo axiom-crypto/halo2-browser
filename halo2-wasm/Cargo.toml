@@ -1,6 +1,6 @@
 [package]
 name = "halo2-wasm"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 
 [lib]
@@ -25,6 +25,8 @@ snark-verifier = { git = "https://github.com/axiom-crypto/snark-verifier.git", b
     "loader_halo2",
     "halo2-axiom",
 ] }
+
+num-bigint = { version = "0.4"}
 
 getrandom = { version = "0.2", features = ["js"] }
 rand = "0.8"

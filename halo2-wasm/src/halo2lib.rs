@@ -21,6 +21,7 @@ use halo2_ecc::ecc::EccChip;
 use halo2_ecc::fields::FieldChip;
 use halo2_ecc::secp256k1::{FpChip, FqChip};
 use itertools::Itertools;
+use num_bigint::BigUint;
 use wasm_bindgen::prelude::*;
 
 use crate::Halo2Wasm;
@@ -320,12 +321,45 @@ impl Halo2LibWasm {
 
     pub fn div_mod(&mut self, a: usize, b: &str, size: &str) -> Vec<u32> {
         let a = self.get_assigned_value(a);
-        let b: usize = b.parse().unwrap();
+        let b = BigUint::parse_bytes(b.as_bytes(), 10).unwrap();
         let size: usize = size.parse().unwrap();
         let out = self
             .range
             .div_mod(self.builder.borrow_mut().main(0), a, b, size);
         let out = vec![out.0, out.1];
+        self.to_js_assigned_values(out)
+    }
+
+    pub fn to_hi_lo(&mut self, a: usize) -> Vec<u32> {
+        let a = self.get_assigned_value(a);
+        let a_val = a.value();
+        let a_bytes = a_val.to_bytes();
+
+        let a0_bytes: &[u8; 32] = &a_bytes[..16].try_into().unwrap();
+        let a1_bytes: &[u8; 32] = &a_bytes[16..].try_into().unwrap();
+        let a0 = Fr::from_bytes(a0_bytes).unwrap();
+        let a1 = Fr::from_bytes(a1_bytes).unwrap();
+
+        let a0 = self.builder.borrow_mut().main(0).load_witness(a0);
+        let a1 = self.builder.borrow_mut().main(0).load_witness(a1);
+
+        self.range
+            .range_check(self.builder.borrow_mut().main(0), a0, 128);
+        self.range
+            .range_check(self.builder.borrow_mut().main(0), a1, 125);
+
+        let two_pow_128 = self
+            .builder
+            .borrow_mut()
+            .main(0)
+            .load_witness(self.gate.pow_of_two()[128]);
+
+        let a_reconstructed = self
+            .gate
+            .mul_add(self.builder.borrow_mut().main(0), a1, two_pow_128, a0);
+        self.builder.borrow_mut().main(0).constrain_equal(&a, &a_reconstructed);
+
+        let out = vec![a1, a0];
         self.to_js_assigned_values(out)
     }
 
