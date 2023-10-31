@@ -2,7 +2,7 @@ import { Halo2LibWasm, Halo2Wasm } from "@axiom-crypto/halo2-wasm/web";
 import { convertInput, joinArrays } from "../shared/utils";
 import { CircuitValue } from "./CircuitValue";
 import { RawCircuitInput } from "../shared/types";
-import {JsCircuitBn254G1Affine, JsCircuitValue256} from "@axiom-crypto/halo2-wasm/web";
+import {Bn254G1AffinePoint, JsCircuitBn254G1Affine, JsCircuitValue256} from "@axiom-crypto/halo2-wasm/web/halo2_wasm";
 
 export class Halo2Lib {
 
@@ -240,7 +240,44 @@ export class Halo2Lib {
     isZero = (a: CircuitValue) => this.Cell(this. _halo2lib.is_zero(a.cell()));
 
     /**
-     * Selects circuit values from an array based on an indicator circuit value.
+     * Subtracts the 2 points and returns the value.
+     *
+     * @returns The subtraction of these points.
+     * @param g1Point1 - G1 point, x,y in hi lo format for each coordinate
+     * @param g1Point2 - G1 point, x,y in hi lo format for each coordinate
+     */
+
+    bn254G1Sub = (g1Point1: Array<Array<bigint>>, g1Point2: Array<Array<bigint>>) => {
+        let jsG1point1: JsCircuitBn254G1Affine = new JsCircuitBn254G1Affine();
+        let g1point1x: JsCircuitValue256 = new JsCircuitValue256();
+        let g1point1y: JsCircuitValue256 = new JsCircuitValue256();
+        g1point1x.hi = this._halo2lib.constant(g1Point1[0][0].toString()); // x, hi value
+        g1point1x.lo = this._halo2lib.constant(g1Point1[0][1].toString()); // x, lo value
+        g1point1y.hi = this._halo2lib.constant(g1Point1[1][0].toString()); // y, hi value
+        g1point1y.lo = this._halo2lib.constant(g1Point1[1][1].toString()); // y, lo value
+        jsG1point1.x = g1point1x;
+        jsG1point1.y = g1point1y;
+
+        let jsG1point2: JsCircuitBn254G1Affine = new JsCircuitBn254G1Affine();
+        let g1point2x: JsCircuitValue256 = new JsCircuitValue256();
+        let g1point2y: JsCircuitValue256 = new JsCircuitValue256();
+        g1point2x.hi = this._halo2lib.constant(g1Point2[0][0].toString()); // x, hi value
+        g1point2x.lo = this._halo2lib.constant(g1Point2[0][1].toString()); // x, lo value
+        g1point2y.hi = this._halo2lib.constant(g1Point2[1][0].toString()); // y, hi value
+        g1point2y.lo = this._halo2lib.constant(g1Point2[1][1].toString()); // y, lo value
+        jsG1point2.x = g1point1x;
+        jsG1point2.y = g1point1y;
+        const bn254G1AffinePoint: Bn254G1AffinePoint = this._halo2lib.bn254_g1_sub(jsG1point1, jsG1point2);
+
+        // would something like this work ?
+        const jsBn254G1AffinePoint: JsCircuitBn254G1Affine = bn254G1AffinePoint.to_circuit_values_256(this._halo2lib)
+        this.Cell(this._halo2lib.constant(jsBn254G1AffinePoint.x.toString()));
+        this.Cell(this._halo2lib.constant(jsBn254G1AffinePoint.y.toString()));
+
+    };
+
+    /**
+     * Sums the values of the provided G1 points
      *
      * @param points - The array of circuit values in high,low form of each coordinate of G1 points.
      * [G1point1, G1point2, G1point3 ... ] and each Gpoint i.e [x,y] and each x and y will be [hi, lo]
@@ -264,7 +301,12 @@ export class Halo2Lib {
             jsCircuitBn254G1AffineArray.push(newJsCircuitBn254G1Affine);
         }
 
-        this.Cell(this._halo2lib.bn254_g1_sum(jsCircuitBn254G1AffineArray)); // gotta fix this rep
+        const bn254G1AffinePoint: Bn254G1AffinePoint = this._halo2lib.bn254_g1_sum(jsCircuitBn254G1AffineArray);
+
+        // would something liek this work ?
+        const jsBn254G1AffinePoint: JsCircuitBn254G1Affine = bn254G1AffinePoint.to_circuit_values_256(this._halo2lib)
+        this.Cell(this._halo2lib.constant(jsBn254G1AffinePoint.x.toString()));
+        this.Cell(this._halo2lib.constant(jsBn254G1AffinePoint.y.toString()));
     };
 
 
