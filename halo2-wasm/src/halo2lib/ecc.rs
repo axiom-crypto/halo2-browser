@@ -50,6 +50,15 @@ type Fq2Point = FieldVector<FqPoint>;
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254Fq2Point(Fq2Point);
+#[wasm_bindgen]
+impl Bn254Fq2Point {
+    pub fn c0(&self) -> Bn254FqPoint {
+        Bn254FqPoint(self.0[0].clone())
+    }
+    pub fn c1(&self) -> Bn254FqPoint {
+        Bn254FqPoint(self.0[1].clone())
+    }
+}
 
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
@@ -57,23 +66,27 @@ pub struct Bn254G1AffinePoint(EcPoint<Fr, FqPoint>);
 
 #[wasm_bindgen]
 impl Bn254G1AffinePoint {
-    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [[AssignedValue<Fr>; 2] ;2] {
-        [convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.x.limbs()),
-            convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.y.limbs())]
+    pub fn x(&self) -> Bn254FqPoint {
+        Bn254FqPoint(self.0.x().clone())
     }
-    pub fn to_circuit_values_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitBn254G1Affine {
-        let [x, y] = self.to_hi_lo(lib_wasm);
-        let [x_hi, x_lo] = x.map(|_x| lib_wasm.to_js_assigned_value(_x));
-        let [y_hi, y_lo] = y.map(|_y| lib_wasm.to_js_assigned_value(_y));
-        let js_circuit_bn254_g1_affine_point = JsCircuitBn254G1Affine{x: JsCircuitValue256{hi: x_hi, lo: x_lo},
-            y: JsCircuitValue256{hi: y_hi, lo: y_lo}};
-        js_circuit_bn254_g1_affine_point
+    pub fn y(&self) -> Bn254FqPoint {
+        Bn254FqPoint(self.0.y().clone())
     }
 }
 
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254G2AffinePoint(EcPoint<Fr, Fq2Point>);
+
+#[wasm_bindgen]
+impl Bn254G2AffinePoint {
+    pub fn x(&self) -> Bn254Fq2Point {
+        Bn254Fq2Point(self.0.x().clone())
+    }
+    pub fn y(&self) -> Bn254Fq2Point {
+        Bn254Fq2Point(self.0.y().clone())
+    }
+}
 
 /// We use 3 limbs with 88 bits each.
 /// NOT constrained to be less than the prime.
@@ -116,12 +129,29 @@ type FpPoint = ProperCrtUint<Fr>;
 #[derive(Clone, Debug)]
 pub struct Secp256k1AffinePoint(EcPoint<Fr, FpPoint>);
 
+#[wasm_bindgen]
+impl Secp256k1AffinePoint {
+    pub fn x(&self) -> Secp256k1FpPoint {
+        Secp256k1FpPoint(self.0.x().clone())
+    }
+    pub fn y(&self) -> Secp256k1FpPoint {
+        Secp256k1FpPoint(self.0.y().clone())
+    }
+}
+
 /// When this type is used, it is **ASSUMED** that the corresponding `hi,lo` [AssignedValue]s have been range checked to be 128 bits each.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsCircuitValue256 {
     pub hi: JsCircuitValue,
     pub lo: JsCircuitValue,
+}
+#[wasm_bindgen]
+impl JsCircuitValue256 {
+    #[wasm_bindgen(constructor)]
+    pub fn new(hi: JsCircuitValue, lo: JsCircuitValue) -> Self {
+        Self { hi, lo }
+    }
 }
 
 // following notation of https://github.com/paulmillr/noble-curves/tree/main
@@ -131,12 +161,26 @@ pub struct JsCircuitBn254Fq2 {
     pub c0: JsCircuitValue256,
     pub c1: JsCircuitValue256,
 }
+#[wasm_bindgen]
+impl JsCircuitBn254Fq2 {
+    #[wasm_bindgen(constructor)]
+    pub fn new(c0: JsCircuitValue256, c1: JsCircuitValue256) -> Self {
+        Self { c0, c1 }
+    }
+}
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsCircuitBn254G1Affine {
     pub x: JsCircuitValue256,
     pub y: JsCircuitValue256,
+}
+#[wasm_bindgen]
+impl JsCircuitBn254G1Affine {
+    #[wasm_bindgen(constructor)]
+    pub fn new(x: JsCircuitValue256, y: JsCircuitValue256) -> Self {
+        Self { x, y }
+    }
 }
 
 #[wasm_bindgen(getter_with_clone)]
@@ -145,12 +189,26 @@ pub struct JsCircuitBn254G2Affine {
     pub x: JsCircuitBn254Fq2,
     pub y: JsCircuitBn254Fq2,
 }
+#[wasm_bindgen]
+impl JsCircuitBn254G2Affine {
+    #[wasm_bindgen(constructor)]
+    pub fn new(x: JsCircuitBn254Fq2, y: JsCircuitBn254Fq2) -> Self {
+        Self { x, y }
+    }
+}
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsCircuitSecp256k1Affine {
     pub x: JsCircuitValue256,
     pub y: JsCircuitValue256,
+}
+#[wasm_bindgen]
+impl JsCircuitSecp256k1Affine {
+    #[wasm_bindgen(constructor)]
+    pub fn new(x: JsCircuitValue256, y: JsCircuitValue256) -> Self {
+        Self { x, y }
+    }
 }
 
 #[wasm_bindgen]
@@ -209,8 +267,11 @@ impl Halo2LibWasm {
     /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere
     /// and also it constraints that g1_point_1.x != g1_point_2.x
     /// Prevents any g1_points from being identity.
-    pub fn bn254_g1_sub(&self, g1_point_1: JsCircuitBn254G1Affine,
-                        g1_point_2: JsCircuitBn254G1Affine) -> Bn254G1AffinePoint {
+    pub fn bn254_g1_sub_unequal(
+        &self,
+        g1_point_1: JsCircuitBn254G1Affine,
+        g1_point_2: JsCircuitBn254G1Affine,
+    ) -> Bn254G1AffinePoint {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
         let mut builder = self.builder.borrow_mut();
@@ -218,9 +279,8 @@ impl Halo2LibWasm {
         let g1_point_1_loaded: EcPoint<Fr, FqPoint> =
             self.load_bn254_g1_impl(&g1_chip, g1_point_1).0;
         let g1_point_2_loaded: EcPoint<Fr, FqPoint> =
-            self.load_bn254_g1_impl(&g1_chip,g1_point_2).0;
-        let diff = g1_chip
-            .sub_unequal(ctx, g1_point_1_loaded,g1_point_2_loaded, true);
+            self.load_bn254_g1_impl(&g1_chip, g1_point_2).0;
+        let diff = g1_chip.sub_unequal(ctx, g1_point_1_loaded, g1_point_2_loaded, true);
         Bn254G1AffinePoint(diff)
     }
 
@@ -252,25 +312,25 @@ impl Halo2LibWasm {
         let sum = g2_chip.sum::<Bn254G2Affine>(ctx, g2_points);
         Bn254G2AffinePoint(sum)
     }
-    /// Verifies that e(lhs_1, rhs_1) = e(lhs_2, rhs_2) by checking e(lhs_1, rhs_1)*e(-lhs_2, rhs_2) === 1
+    /// Verifies that e(lhs_g1, lhs_g2) = e(rhs_g1, rhs_g2) by checking e(lhs_g1, lhs_g2)*e(-rhs_g1, rhs_g2) === 1
     /// Returns [CircuitValue] for the result as a boolean (1 if signature verification is successful).
     /// None of the points should be identity.
     pub fn bn254_pairing_check(
         &self,
-        lhs_1: Bn254G1AffinePoint,
-        rhs_1: Bn254G2AffinePoint,
-        lhs_2: Bn254G1AffinePoint,
-        rhs_2: Bn254G2AffinePoint,
+        lhs_g1: Bn254G1AffinePoint,
+        lhs_g2: Bn254G2AffinePoint,
+        rhs_g1: Bn254G1AffinePoint,
+        rhs_g2: Bn254G2AffinePoint,
     ) -> JsCircuitValue {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
         let mut builder = self.builder.borrow_mut();
         let ctx = builder.main(0);
-        let neg_lhs_2 = g1_chip.negate(ctx, lhs_2.0);
+        let neg_rhs_g1 = g1_chip.negate(ctx, rhs_g1.0);
         let pairing_chip = PairingChip::new(&fq_chip);
 
-        let multi_paired =
-            pairing_chip.multi_miller_loop(ctx, vec![(&lhs_1.0, &rhs_1.0), (&neg_lhs_2, &rhs_2.0)]);
+        let multi_paired = pairing_chip
+            .multi_miller_loop(ctx, vec![(&lhs_g1.0, &lhs_g2.0), (&neg_rhs_g1, &rhs_g2.0)]);
         let fq12_chip = Bn254Fq12Chip::new(&fq_chip);
         let result = fq12_chip.final_exp(ctx, multi_paired);
         let fq12_one = fq12_chip.load_constant(ctx, Bn254Fq12::one());
