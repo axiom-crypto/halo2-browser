@@ -56,6 +56,22 @@ pub struct Bn254Fq2Point(Fq2Point);
 pub struct Bn254G1AffinePoint(EcPoint<Fr, FqPoint>);
 
 #[wasm_bindgen]
+impl Bn254G1AffinePoint {
+    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [[AssignedValue<Fr>; 2] ;2] {
+        [convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.x.limbs()),
+            convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.y.limbs())]
+    }
+    pub fn to_circuit_values_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitBn254G1Affine {
+        let [x, y] = self.to_hi_lo(lib_wasm);
+        let [x_hi, x_lo] = x.map(|_x| lib_wasm.to_js_assigned_value(_x));
+        let [y_hi, y_lo] = y.map(|_y| lib_wasm.to_js_assigned_value(_y));
+        let js_circuit_bn254_g1_affine_point = JsCircuitBn254G1Affine{x: JsCircuitValue256{hi: x_hi, lo: x_lo},
+            y: JsCircuitValue256{hi: y_hi, lo: y_lo}};
+        js_circuit_bn254_g1_affine_point
+    }
+}
+
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Bn254G2AffinePoint(EcPoint<Fr, Fq2Point>);
 
@@ -188,6 +204,26 @@ impl Halo2LibWasm {
         let sum = g1_chip.sum::<Bn254G1Affine>(ctx, g1_points);
         Bn254G1AffinePoint(sum)
     }
+
+    /// `g1_point_1` and `g1_point_2` are `CircuitBn254G1Affine` points in hi-lo form.
+    /// This function does not range check `hi,lo` to be `uint128` in case it's already done elsewhere
+    /// and also it constraints that g1_point_1.x != g1_point_2.x
+    /// Prevents any g1_points from being identity.
+    pub fn bn254_g1_sub(&self, g1_point_1: JsCircuitBn254G1Affine,
+                        g1_point_2: JsCircuitBn254G1Affine) -> Bn254G1AffinePoint {
+        let fq_chip = self.bn254_fq_chip();
+        let g1_chip = EccChip::new(&fq_chip);
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
+        let g1_point_1_loaded: EcPoint<Fr, FqPoint> =
+            self.load_bn254_g1_impl(&g1_chip, g1_point_1).0;
+        let g1_point_2_loaded: EcPoint<Fr, FqPoint> =
+            self.load_bn254_g1_impl(&g1_chip,g1_point_2).0;
+        let diff = g1_chip
+            .sub_unequal(ctx, g1_point_1_loaded,g1_point_2_loaded, true);
+        Bn254G1AffinePoint(diff)
+    }
+
     /// Doesn't range check limbs of g2_point.
     /// Does not allow you to load identity point.
     pub fn load_bn254_g2(&self, point: JsCircuitBn254G2Affine) -> Bn254G2AffinePoint {
