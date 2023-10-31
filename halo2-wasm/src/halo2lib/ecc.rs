@@ -472,7 +472,7 @@ fn constrain_limbs_equality<F: BigPrimeField>(
     assert!(limb_bits <= 128);
     assert!(limb_bits > 64);
     // limb_bits, 128 - limb_bits
-    let (limb0, tmp0) = range.div_mod(ctx, lo, BigUint::one() << limb_bits, 128);
+    let (tmp0, limb0) = range.div_mod(ctx, lo, BigUint::one() << limb_bits, 128);
     // limb_bits - (128 - limb_bits) = 2 * limb_bits - 128 > 0
     let rem_bits = limb_bits - (128 - limb_bits);
     let (limb2, tmp1) = range.div_mod(ctx, hi, BigUint::one() << rem_bits, 128);
@@ -494,7 +494,7 @@ fn convert_3limbs88bits_to_hi_lo(
     let range = &lib_wasm.range;
     let gate = &range.gate;
     let ctx = builder.main(0);
-    let (limb1_lo, limb1_hi) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);
+    let (limb1_hi, limb1_lo) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);
     let multiplier = biguint_to_fe(&(BigUint::one() << 88));
     let lo = gate.mul_add(ctx, limb1_lo, Constant(multiplier), limbs[0]);
     let multiplier = biguint_to_fe(&(BigUint::one() << hi_bits));

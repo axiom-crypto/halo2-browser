@@ -1,4 +1,4 @@
 export * from "./CircuitValue";
 export * from "./CircuitValue256";
-export * from "./functions";
+export { Halo2Lib } from "./functions";
 export * from "./ecc";
