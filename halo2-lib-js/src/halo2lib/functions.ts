@@ -507,23 +507,23 @@ export class Halo2Lib {
         return this.Cell(this._halo2lib.verify_secp256k1_ecdsa_signature(pubkey, this._toJsCircuitValue256(r), this._toJsCircuitValue256(s), this._toJsCircuitValue256(msgHash)));
     }
 
-    _toJsCircuitValue256(val: CircuitValue256) {
+    private _toJsCircuitValue256(val: CircuitValue256) {
         return this._halo2lib.to_js_circuit_value_256(val.hi().cell(), val.lo().cell());
     }
 
-    _toJsCircuitBn254G1Affine(point: CircuitBn254G1Affine) {
+    private _toJsCircuitBn254G1Affine(point: CircuitBn254G1Affine) {
         return this._halo2lib.to_js_circuit_bn254_g1_affine(this._toJsCircuitValue256(point.x), this._toJsCircuitValue256(point.y));
     }
 
-    _toJsCircuitBn254Fq2(point: CircuitBn254Fq2) {
+    private _toJsCircuitBn254Fq2(point: CircuitBn254Fq2) {
         return this._halo2lib.to_js_circuit_bn254_fq2(this._toJsCircuitValue256(point.c0), this._toJsCircuitValue256(point.c1));
     }
 
-    _toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine) {
+    private _toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine) {
         return this._halo2lib.to_js_circuit_bn254_g2_affine(this._toJsCircuitBn254Fq2(point.x), this._toJsCircuitBn254Fq2(point.y));
     }
 
-    _toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine) {
+    private _toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine) {
         return this._halo2lib.to_js_circuit_secp256k1_affine(this._toJsCircuitValue256(point.x), this._toJsCircuitValue256(point.y));
     }
 }
