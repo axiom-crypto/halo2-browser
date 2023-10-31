@@ -11,7 +11,7 @@ use halo2_base::{
     poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
     utils::{biguint_to_fe, fe_to_biguint, modulus},
     AssignedValue, Context,
-    QuantumCell::Existing,
+    QuantumCell::{Existing, Constant},
 };
 use itertools::Itertools;
 use num_bigint::BigUint;
@@ -349,16 +349,16 @@ impl Halo2LibWasm {
 
         let two_pow_128 = self.gate.pow_of_two()[128];
         let r = modulus::<Fr>();
-        let r_div_two_pow_128 = r.clone() / fe_to_biguint(&two_pow_128);
-        let r_mod_two_pow_128 = r % fe_to_biguint(&two_pow_128);
+        let a_hi_max = r.clone() / fe_to_biguint(&two_pow_128);
+        let a_lo_max = r % fe_to_biguint(&two_pow_128);
 
         //check a_hi < r // 2**128
-        let check_1 = self.range.is_big_less_than_safe(ctx, a_hi, r_div_two_pow_128.clone());
+        let check_1 = self.range.is_big_less_than_safe(ctx, a_hi, a_hi_max.clone());
 
         //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
-        let r_div_two_pow_128_fe = biguint_to_fe::<Fr>(&r_div_two_pow_128);
-        let check_2_hi = self.gate.is_equal(ctx, a_hi, QuantumCell::Constant(r_div_two_pow_128_fe));
-        let check_2_lo = self.range.is_big_less_than_safe(ctx, a_lo, r_mod_two_pow_128);
+        let a_hi_max_fe = biguint_to_fe::<Fr>(&a_hi_max);
+        let check_2_hi = self.gate.is_equal(ctx, a_hi, Constant(a_hi_max_fe));
+        let check_2_lo = self.range.is_big_less_than_safe(ctx, a_lo, a_lo_max);
         let check_2 = self.gate.and(ctx, check_2_hi, check_2_lo);
 
         //constrain (check_1 || check_2) == 1
@@ -369,7 +369,7 @@ impl Halo2LibWasm {
         self.range.range_check(ctx, a_lo, 128);
         self.range.range_check(ctx, a_hi, 126);
 
-        let a_reconstructed = self.gate.mul_add(ctx, a_hi, QuantumCell::Constant(two_pow_128), a_lo);
+        let a_reconstructed = self.gate.mul_add(ctx, a_hi, Constant(two_pow_128), a_lo);
         ctx.constrain_equal(&a, &a_reconstructed);
 
         let out = vec![a_hi, a_lo];

@@ -16,8 +16,6 @@ halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib.git", package = "
 snark-verifier-sdk = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "develop", default-features = false, features = ["loader_halo2", "halo2-axiom"] }
 snark-verifier = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "develop", default-features = false, features = ["loader_halo2", "halo2-axiom"] }
 
-num-bigint = { version = "0.4"}
-
 getrandom = { version = "0.2", features = ["js"] }
 rand = "0.8"
 itertools = "0.10"
