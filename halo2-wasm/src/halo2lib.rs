@@ -342,24 +342,19 @@ impl Halo2LibWasm {
         let a0 = Fr::from_bytes(&a0_bytes).unwrap();
         let a1 = Fr::from_bytes(&a1_bytes).unwrap();
 
-        let a0 = self.builder.borrow_mut().main(0).load_witness(a0);
-        let a1 = self.builder.borrow_mut().main(0).load_witness(a1);
+        let mut builder = self.builder.borrow_mut();
+        let ctx = builder.main(0);
 
-        self.range
-            .range_check(self.builder.borrow_mut().main(0), a0, 128);
-        self.range
-            .range_check(self.builder.borrow_mut().main(0), a1, 125);
+        let a0 = ctx.load_witness(a0);
+        let a1 = ctx.load_witness(a1);
 
-        let two_pow_128 = self
-            .builder
-            .borrow_mut()
-            .main(0)
-            .load_witness(self.gate.pow_of_two()[128]);
+        self.range.range_check(ctx, a0, 128);
+        self.range.range_check(ctx, a1, 125);
 
-        let a_reconstructed = self
-            .gate
-            .mul_add(self.builder.borrow_mut().main(0), a1, two_pow_128, a0);
-        self.builder.borrow_mut().main(0).constrain_equal(&a, &a_reconstructed);
+        let two_pow_128 = ctx.load_witness(self.gate.pow_of_two()[128]);
+
+        let a_reconstructed = self.gate.mul_add(ctx, a1, two_pow_128, a0);
+        ctx.constrain_equal(&a, &a_reconstructed);
 
         let out = vec![a1, a0];
         self.to_js_assigned_values(out)
