@@ -11,7 +11,7 @@ use halo2_base::{
     poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
     utils::{biguint_to_fe, fe_to_biguint, modulus},
     AssignedValue, Context,
-    QuantumCell::{Existing, Constant},
+    QuantumCell::{Constant, Existing},
 };
 use itertools::Itertools;
 use num_bigint::BigUint;
@@ -341,11 +341,8 @@ impl Halo2LibWasm {
         let a_lo = Fr::from_bytes(&a_lo_bytes).unwrap();
         let a_hi = Fr::from_bytes(&a_hi_bytes).unwrap();
 
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
-
-        let a_lo = ctx.load_witness(a_lo);
-        let a_hi = ctx.load_witness(a_hi);
+        let a_lo = self.builder.borrow_mut().main(0).load_witness(a_lo);
+        let a_hi = self.builder.borrow_mut().main(0).load_witness(a_hi);
 
         let two_pow_128 = self.gate.pow_of_two()[128];
         let r = modulus::<Fr>();
@@ -353,24 +350,51 @@ impl Halo2LibWasm {
         let a_lo_max = r % fe_to_biguint(&two_pow_128);
 
         //check a_hi < r // 2**128
-        let check_1 = self.range.is_big_less_than_safe(ctx, a_hi, a_hi_max.clone());
+        let check_1 = self.range.is_big_less_than_safe(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            a_hi_max.clone(),
+        );
 
         //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
         let a_hi_max_fe = biguint_to_fe::<Fr>(&a_hi_max);
-        let check_2_hi = self.gate.is_equal(ctx, a_hi, Constant(a_hi_max_fe));
-        let check_2_lo = self.range.is_big_less_than_safe(ctx, a_lo, a_lo_max);
-        let check_2 = self.gate.and(ctx, check_2_hi, check_2_lo);
+        let check_2_hi = self.gate.is_equal(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            Constant(a_hi_max_fe),
+        );
+        let check_2_lo =
+            self.range
+                .is_big_less_than_safe(self.builder.borrow_mut().main(0), a_lo, a_lo_max);
+        let check_2 = self
+            .gate
+            .and(self.builder.borrow_mut().main(0), check_2_hi, check_2_lo);
 
         //constrain (check_1 || check_2) == 1
-        let check = self.gate.or(ctx, check_1, check_2);
-        let one = ctx.load_constant(Fr::one());
-        ctx.constrain_equal(&check, &one);
+        let check = self
+            .gate
+            .or(self.builder.borrow_mut().main(0), check_1, check_2);
+        let one = self.builder.borrow_mut().main(0).load_constant(Fr::one());
+        self.builder
+            .borrow_mut()
+            .main(0)
+            .constrain_equal(&check, &one);
 
-        self.range.range_check(ctx, a_lo, 128);
-        self.range.range_check(ctx, a_hi, 126);
+        self.range
+            .range_check(self.builder.borrow_mut().main(0), a_lo, 128);
+        self.range
+            .range_check(self.builder.borrow_mut().main(0), a_hi, 126);
 
-        let a_reconstructed = self.gate.mul_add(ctx, a_hi, Constant(two_pow_128), a_lo);
-        ctx.constrain_equal(&a, &a_reconstructed);
+        let a_reconstructed = self.gate.mul_add(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            Constant(two_pow_128),
+            a_lo,
+        );
+        self.builder
+            .borrow_mut()
+            .main(0)
+            .constrain_equal(&a, &a_reconstructed);
 
         let out = vec![a_hi, a_lo];
         self.to_js_assigned_values(out)
