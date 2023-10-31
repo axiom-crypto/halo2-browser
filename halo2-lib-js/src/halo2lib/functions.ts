@@ -2,6 +2,9 @@ import { Halo2LibWasm, Halo2Wasm } from "@axiom-crypto/halo2-wasm/web";
 import { convertInput, joinArrays } from "../shared/utils";
 import { CircuitValue } from "./CircuitValue";
 import { RawCircuitInput } from "../shared/types";
+import {Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitSecp256k1Affine, JsCircuitValue256, Secp256k1AffinePoint} from "@axiom-crypto/halo2-wasm/web/halo2_wasm";
+import { CircuitValue256 } from "./CircuitValue256";
+import { CircuitBn254Fq2, CircuitBn254G1Affine, CircuitBn254G2Affine, CircuitSecp256k1Affine } from "./ecc";
 
 export class Halo2Lib {
 
@@ -305,12 +308,12 @@ export class Halo2Lib {
 
     /**
      * Divides two circuit values and returns the quotient.
-     * 
+     *
      * @param a - The dividend circuit value.
      * @param b - The divisor circuit value.
      * @returns The quotient.
-     * 
-    */
+     *
+     */
     div = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS, d: string = this._MAX_BITS) => {
         if (this._firstPass) {
             b = this.constant(1);
@@ -321,12 +324,12 @@ export class Halo2Lib {
 
     /**
      * Divides two circuit values and returns the remainder.
-     * 
+     *
      * @param a - The dividend circuit value.
      * @param b - The divisor circuit value.
      * @returns The remainder.
-     * 
-    */
+     *
+     */
     mod = (a: CircuitValue, b: CircuitValue, c: string = this._MAX_BITS, d: string = this._MAX_BITS) => {
         const [_, remainder] = this. _halo2lib.div_mod_var(a.cell(), b.cell(), c, d)
         return this.Cell(remainder);
@@ -387,4 +390,142 @@ export class Halo2Lib {
         return this.Cell(res);
     }
 
+    /**
+     * Creates new `CircuitValue256` and range checks `hi, lo` to be `uint128`s.
+     * @param hi 
+     * @param lo 
+     * @returns 
+     */
+    newCircuitValue256 = (hi: CircuitValue, lo: CircuitValue): CircuitValue256 => {
+        this.rangeCheck(hi, 128);
+        this.rangeCheck(lo, 128);
+        return new CircuitValue256(this._halo2lib, { hi, lo });
+    }
+    // ========== BN254 Elliptic Curve functions ============
+
+    /**
+     * 
+     * @param val The field point to load, in hi-lo form. The hi, lo values must have been constrained to be `uint128`s.
+     * @returns `Bn254FqPoint` whose internals are opaque to the user.
+     */
+    loadBn254Fq = (val: CircuitValue256): Bn254FqPoint =>{
+        return this._halo2lib.load_bn254_fq(toJsCircuitValue256(val));
+    }
+
+    /**
+     * 
+     * @param val 
+     * @returns `val` in hi-lo form
+     */
+    convertBn254FqToCircuitValue256 = (val: Bn254FqPoint) => {
+        const _val = val.to_circuit_value_256(this._halo2lib);
+        return new CircuitValue256(this._halo2lib, { hi: this.Cell(_val.hi), lo: this.Cell(_val.lo) });
+    }
+
+    /**
+     * @param point The affine point to load, with coordinates `CircuitValue256`. The hi, lo values must have been constrained to be `uint128`s.
+     * @returns `Bn254G1AffinePoint`, which has been constrained to lie on the curve. Currently this point is not allowed to be identity (0, 0).
+     */
+    loadBn254G1 = (point: CircuitBn254G1Affine): Bn254G1AffinePoint => {
+        return this._halo2lib.load_bn254_g1(toJsCircuitBn254G1Affine(point));
+    }
+
+    /**
+     * Sums the values of the provided G1 affine points
+     *
+     * @param points - The array of `CircuitBn254G1Affine` points. All coordinates are in hi, lo form, and we assume they have been range checked to be `uint128`s.
+     * @returns The sum of all these points as `Bn254G1AffinePoint`.
+     */
+    bn254G1Sum = (points: Array<CircuitBn254G1Affine>): Bn254G1AffinePoint => {
+        const _points = points.map(toJsCircuitBn254G1Affine);
+        return this._halo2lib.bn254_g1_sum(_points);
+    };
+
+    /**
+     * Subtracts the 2 points and returns the value. Constrains that the points are not equal and also one is not the negative of the other (this would be a point doubling, which requires a different formula).
+     *
+     * @returns The subtraction of these points.
+     * @param g1Point1 - G1 point, x,y in hi lo format for each coordinate
+     * @param g1Point2 - G1 point, x,y in hi lo format for each coordinate
+     */
+
+    bn254G1SubUnequal = (g1Point1: CircuitBn254G1Affine, g1Point2: CircuitBn254G1Affine): Bn254G1AffinePoint => {
+        return this._halo2lib.bn254_g1_sub_unequal(toJsCircuitBn254G1Affine(g1Point1), toJsCircuitBn254G1Affine(g1Point2));
+    };
+
+    /**
+     * @param point The affine point to load, with coordinates `CircuitBn254Fq2`. The hi, lo values must have been constrained to be `uint128`s.
+     * @returns `Bn254G2AffinePoint`, which has been constrained to lie on the curve. Currently this point is not allowed to be identity (Fq2(0), Fq2(0)).
+     */
+    loadBn254G2 = (point: CircuitBn254G2Affine): Bn254G2AffinePoint => {    
+        return this._halo2lib.load_bn254_g2(toJsCircuitBn254G2Affine(point));
+    }
+
+    /**
+     * Sums the values of the provided G2 affine points
+     *
+     * @param points - The array of `CircuitBn254G2Affine` points. All coordinates are `CircuitBn254Fq2`, whose coordinates are in hi, lo form, and we assume the hi, lo's have been range checked to be `uint128`s.
+     * @returns The sum of all these points as `Bn254G2AffinePoint`.
+     */
+    bn254G2Sum = (points: Array<CircuitBn254G2Affine>): Bn254G2AffinePoint => {
+        const _points = points.map(toJsCircuitBn254G2Affine);
+        return this._halo2lib.bn254_g2_sum(_points);
+    }
+
+    /** 
+     * Verifies that e(lhsG1, lhsG2) = e(rhsG1, rhsG2) by checking e(lhsG1, lhsG2)*e(-rhsG1, rhsG2) === 1
+     * None of the points should be identity.
+     * 
+     * @param lhsG1
+     * @param lhsG2
+     * @param rhsG1
+     * @param rhsG2
+     * @returns [CircuitValue] for the result as a boolean (1 if signature verification is successful).
+     */
+    bn254PairingCheck = (lhsG1: Bn254G1AffinePoint, lhsG2: Bn254G2AffinePoint, rhsG1: Bn254G1AffinePoint, rhsG2: Bn254G2AffinePoint): CircuitValue => {
+        return this.Cell(this._halo2lib.bn254_pairing_check(lhsG1, lhsG2, rhsG1, rhsG2));
+    }
+
+    /**
+     * @param pubkey The public key to load, in the form of an affine elliptic curve point `(x, y)` where `x, y` have type `CircuitValue256`. The hi, lo values of each `CircuitValue256` must have been constrained to be `uint128`s.
+     * @returns `Secp256k1AffinePoint`, the public key as a loaded elliptic curve point. This has been constrained to lie on the curve. The public key is constrained to not be the identity (0, 0).
+     */
+    loadSecp256k1Pubkey = (pubkey: CircuitSecp256k1Affine): Secp256k1AffinePoint => {
+        return this._halo2lib.load_secp256k1_pubkey(toJsCircuitSecp256k1Affine(pubkey));
+    }
+
+    /**
+     * 
+     * Verifies the ECDSA signature `(r, s)` with message hash `msgHash` using the secp256k1 public key `pubkey`. Returns 1 if the signature is valid, 0 otherwise.
+     * @param pubkey 
+     * @param r 
+     * @param s 
+     * @param msgHash 
+     * @returns 
+     */
+    verifySecp256k1ECDSASignature = (pubkey: Secp256k1AffinePoint, r: CircuitValue256, s: CircuitValue256, msgHash: CircuitValue256): CircuitValue => {
+        return this.Cell(this._halo2lib.verify_secp256k1_ecdsa_signature(pubkey, toJsCircuitValue256(r), toJsCircuitValue256(s), toJsCircuitValue256(msgHash)));
+    }
+}
+
+function toJsCircuitValue256(val: CircuitValue256): JsCircuitValue256 {
+    return new JsCircuitValue256(val.hi().cell(), val.lo().cell());
+}
+
+function toJsCircuitBn254G1Affine(point: CircuitBn254G1Affine): JsCircuitBn254G1Affine {
+    return new JsCircuitBn254G1Affine(toJsCircuitValue256(point.x), toJsCircuitValue256(point.y));
+}
+
+function toJsCircuitBn254Fq2(point: CircuitBn254Fq2): JsCircuitBn254Fq2 {
+    return new JsCircuitBn254Fq2(toJsCircuitValue256(point.c0), toJsCircuitValue256(point.c1));
+}
+
+function toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine): JsCircuitBn254G2Affine {
+    const x = toJsCircuitBn254Fq2(point.x);
+    const y = toJsCircuitBn254Fq2(point.y);
+    return new JsCircuitBn254G2Affine(x,y);
+}
+
+function toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine): JsCircuitSecp256k1Affine{
+    return new JsCircuitSecp256k1Affine(toJsCircuitValue256(point.x), toJsCircuitValue256(point.y));
 }

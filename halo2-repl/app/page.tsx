@@ -6,7 +6,9 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import { type editor } from 'monaco-editor';
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Halo2Repl } from "./worker/halo2repl";
-import { DEFAULT_CIRCUIT_CONFIG, makePublicDocs, halo2Docs } from "@axiom-crypto/halo2-lib-js"
+import { halo2Docs } from "@axiom-crypto/halo2-lib-js/shared/docs/halo2Docs";
+import { makePublicDocs } from "@axiom-crypto/halo2-lib-js/shared/docs/makePublicDocs";
+import { DEFAULT_CIRCUIT_CONFIG } from "@axiom-crypto/halo2-lib-js/circuit/types";
 import { DEFAULT_CODE, DEFAULT_INPUT } from "@/utils/constants";
 import { fetchGist, fetchGithubAccessToken } from "@/utils/github";
 import JSZip from "jszip";

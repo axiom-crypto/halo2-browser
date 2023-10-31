@@ -1,36 +1,34 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use halo2_base::gates::circuit::builder::BaseCircuitBuilder;
-use halo2_base::gates::flex_gate::{GateChip, GateInstructions};
-use halo2_base::gates::range::{RangeChip, RangeInstructions};
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-use halo2_base::halo2_proofs::halo2curves::group::ff::PrimeField;
-// use halo2_base::halo2_proofs::halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine};
-use halo2_base::halo2_proofs::{
-    arithmetic::CurveAffine,
-    halo2curves::secp256k1::{Fp, Fq, Secp256k1Affine},
+use halo2_base::{
+    gates::{
+        circuit::builder::BaseCircuitBuilder,
+        flex_gate::{GateChip, GateInstructions},
+        range::{RangeChip, RangeInstructions},
+    },
+    halo2_proofs::{arithmetic::CurveAffine, halo2curves::ff::PrimeField},
+    poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
+    utils::{biguint_to_fe, fe_to_biguint, modulus},
+    AssignedValue, Context,
+    QuantumCell::Existing,
 };
-use halo2_base::poseidon::hasher::spec::OptimizedPoseidonSpec;
-use halo2_base::poseidon::hasher::PoseidonHasher;
-use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
-use halo2_base::{AssignedValue, QuantumCell};
-use halo2_base::QuantumCell::Existing;
-use halo2_ecc::ecc::ecdsa::ecdsa_verify_no_pubkey_check;
-use halo2_ecc::ecc::EccChip;
-use halo2_ecc::fields::FieldChip;
-use halo2_ecc::secp256k1::{FpChip, FqChip};
 use itertools::Itertools;
 use num_bigint::BigUint;
 use wasm_bindgen::prelude::*;
 
 use crate::Halo2Wasm;
 
+pub mod ecc;
+
 const T: usize = 3;
 const RATE: usize = 2;
 const R_F: usize = 8;
 const R_P: usize = 57;
 const SECURE_MDS: usize = 0;
+type Fr = ecc::Bn254Fr;
+// TODO: use wasm_bindgen to sync with js CircuitValue type
+type JsCircuitValue = usize;
 
 #[wasm_bindgen]
 pub struct Halo2LibWasm {
@@ -67,14 +65,15 @@ impl Halo2LibWasm {
         self.range = range;
     }
 
-    fn get_assigned_value(&mut self, idx: usize) -> AssignedValue<Fr> {
-        self.builder
-            .borrow_mut()
-            .main(0)
-            .get(idx.try_into().unwrap())
+    fn get_assigned_value(&self, idx: usize) -> AssignedValue<Fr> {
+        self.builder.borrow().core().phase_manager[0]
+            .threads
+            .last()
+            .unwrap()
+            .get(idx as isize)
     }
 
-    fn get_assigned_values(&mut self, a: &[u32]) -> Vec<AssignedValue<Fr>> {
+    fn get_assigned_values(&self, a: &[u32]) -> Vec<AssignedValue<Fr>> {
         a.iter()
             .map(|x| self.get_assigned_value(*x as usize))
             .collect()
@@ -278,7 +277,7 @@ impl Halo2LibWasm {
         self.builder.borrow_mut().main(0).constrain_equal(&a, &b);
     }
 
-    pub fn range_check(&mut self, a: usize, b: &str) {
+    pub fn range_check(&self, a: usize, b: &str) {
         let a = self.get_assigned_value(a);
         let b: usize = b.parse().unwrap();
         self.range
@@ -399,52 +398,6 @@ impl Halo2LibWasm {
         self.to_js_assigned_value(out)
     }
 
-    pub fn ecdsa_benchmark(&mut self, sk: u64, msg_hash: u64, k: u64) -> usize {
-        // let pk = self.get_assigned_values(pk);
-        // let r = self.get_assigned_value(r);
-        // let s = self.get_assigned_value(s);
-        // let msg_hash = self.get_assigned_value(msg_hash);
-
-        let sk = <Secp256k1Affine as CurveAffine>::ScalarExt::from(sk);
-        let pubkey = Secp256k1Affine::from(Secp256k1Affine::generator() * sk);
-        let msg_hash = <Secp256k1Affine as CurveAffine>::ScalarExt::from(msg_hash);
-
-        let k = <Secp256k1Affine as CurveAffine>::ScalarExt::from(k);
-        let k_inv = k.invert().unwrap();
-
-        let r_point = Secp256k1Affine::from(Secp256k1Affine::generator() * k)
-            .coordinates()
-            .unwrap();
-        let x = r_point.x();
-        let x_bigint = fe_to_biguint(x);
-
-        let r = biguint_to_fe::<Fq>(&(x_bigint % modulus::<Fq>()));
-        let s = k_inv * (msg_hash + (r * sk));
-
-        let fp_chip = FpChip::<Fr>::new(&self.range, 88, 3);
-        let fq_chip = FqChip::<Fr>::new(&self.range, 88, 3);
-
-        let [m, r, s] =
-            [msg_hash, r, s].map(|x| fq_chip.load_private(self.builder.borrow_mut().main(0), x));
-
-        let ecc_chip = EccChip::<Fr, FpChip<Fr>>::new(&fp_chip);
-        let pk = ecc_chip
-            .load_private_unchecked(self.builder.borrow_mut().main(0), (pubkey.x, pubkey.y));
-
-        let res = ecdsa_verify_no_pubkey_check::<Fr, Fp, Fq, Secp256k1Affine>(
-            &ecc_chip,
-            self.builder.borrow_mut().main(0),
-            pk,
-            r,
-            s,
-            m,
-            4,
-            4,
-        );
-
-        self.to_js_assigned_value(res)
-    }
-
     pub fn poseidon(&mut self, a: &[u32]) -> usize {
         let a = self.get_assigned_values(a);
         let spec = OptimizedPoseidonSpec::<Fr, T, RATE>::new::<R_F, R_P, SECURE_MDS>();
@@ -474,7 +427,7 @@ impl Halo2LibWasm {
         public.push(a);
     }
 
-    pub fn log(&mut self, circuit: &mut Halo2Wasm, a: usize) {
+    pub fn log(&mut self, circuit: &Halo2Wasm, a: usize) {
         let val = self.value(a);
         unsafe {
             circuit.log(val);

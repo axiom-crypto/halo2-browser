@@ -1,8 +1,12 @@
-import { Halo2Wasm, initPanicHook, Halo2LibWasm, CircuitConfig } from "../../pkg/js/halo2_wasm";
+import {
+  Halo2Wasm, initPanicHook, Halo2LibWasm, CircuitConfig,
+  Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitSecp256k1Affine, JsCircuitValue256, Secp256k1AffinePoint
+} from "../../pkg/js/halo2_wasm";
 import { getKzgParams } from "../kzg";
 import { DEFAULT_CIRCUIT_CONFIG } from "../shared";
 
 export { CircuitConfig, DEFAULT_CIRCUIT_CONFIG, Halo2Wasm, Halo2LibWasm, getKzgParams };
+export { Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitSecp256k1Affine, JsCircuitValue256, Secp256k1AffinePoint };
 
 export const getHalo2Wasm = () => {
   initPanicHook();
@@ -43,7 +47,7 @@ export abstract class CircuitScaffold {
     this.halo2wasm.config(config);
   }
 
-  async loadParams(){
+  async loadParams() {
     const kzgParams = await getKzgParams(this.config.k);
     this.halo2wasm.loadParams(kzgParams);
   }
