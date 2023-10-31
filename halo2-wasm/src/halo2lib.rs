@@ -14,7 +14,7 @@ use halo2_base::halo2_proofs::{
 use halo2_base::poseidon::hasher::spec::OptimizedPoseidonSpec;
 use halo2_base::poseidon::hasher::PoseidonHasher;
 use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
-use halo2_base::AssignedValue;
+use halo2_base::{AssignedValue, QuantumCell};
 use halo2_base::QuantumCell::Existing;
 use halo2_ecc::ecc::ecdsa::ecdsa_verify_no_pubkey_check;
 use halo2_ecc::ecc::EccChip;
@@ -335,28 +335,45 @@ impl Halo2LibWasm {
         let a_val = a.value();
         let a_bytes = a_val.to_bytes();
 
-        let mut a0_bytes = [0u8; 32];
-        let mut a1_bytes = [0u8; 32];
-        a0_bytes[..16].copy_from_slice(&a_bytes[..16]);
-        a1_bytes[..16].copy_from_slice(&a_bytes[16..]);
-        let a0 = Fr::from_bytes(&a0_bytes).unwrap();
-        let a1 = Fr::from_bytes(&a1_bytes).unwrap();
+        let mut a_lo_bytes = [0u8; 32];
+        let mut a_hi_bytes = [0u8; 32];
+        a_lo_bytes[..16].copy_from_slice(&a_bytes[..16]);
+        a_hi_bytes[..16].copy_from_slice(&a_bytes[16..]);
+        let a_lo = Fr::from_bytes(&a_lo_bytes).unwrap();
+        let a_hi = Fr::from_bytes(&a_hi_bytes).unwrap();
 
         let mut builder = self.builder.borrow_mut();
         let ctx = builder.main(0);
 
-        let a0 = ctx.load_witness(a0);
-        let a1 = ctx.load_witness(a1);
+        let a_lo = ctx.load_witness(a_lo);
+        let a_hi = ctx.load_witness(a_hi);
 
-        self.range.range_check(ctx, a0, 128);
-        self.range.range_check(ctx, a1, 125);
+        let two_pow_128 = self.gate.pow_of_two()[128];
+        let r = modulus::<Fr>();
+        let r_div_two_pow_128 = r.clone() / fe_to_biguint(&two_pow_128);
+        let r_mod_two_pow_128 = r % fe_to_biguint(&two_pow_128);
 
-        let two_pow_128 = ctx.load_witness(self.gate.pow_of_two()[128]);
+        //check a_hi < r // 2**128
+        let check_1 = self.range.is_big_less_than_safe(ctx, a_hi, r_div_two_pow_128.clone());
 
-        let a_reconstructed = self.gate.mul_add(ctx, a1, two_pow_128, a0);
+        //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
+        let r_div_two_pow_128_fe = biguint_to_fe::<Fr>(&r_div_two_pow_128);
+        let check_2_hi = self.gate.is_equal(ctx, a_hi, QuantumCell::Constant(r_div_two_pow_128_fe));
+        let check_2_lo = self.range.is_big_less_than_safe(ctx, a_lo, r_mod_two_pow_128);
+        let check_2 = self.gate.and(ctx, check_2_hi, check_2_lo);
+
+        //constrain (check_1 || check_2) == 1
+        let check = self.gate.or(ctx, check_1, check_2);
+        let one = ctx.load_constant(Fr::one());
+        ctx.constrain_equal(&check, &one);
+
+        self.range.range_check(ctx, a_lo, 128);
+        self.range.range_check(ctx, a_hi, 126);
+
+        let a_reconstructed = self.gate.mul_add(ctx, a_hi, QuantumCell::Constant(two_pow_128), a_lo);
         ctx.constrain_equal(&a, &a_reconstructed);
 
-        let out = vec![a1, a0];
+        let out = vec![a_hi, a_lo];
         self.to_js_assigned_values(out)
     }
 
