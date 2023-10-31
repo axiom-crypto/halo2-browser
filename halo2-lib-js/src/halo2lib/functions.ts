@@ -400,6 +400,12 @@ export class Halo2Lib {
     loadBn254Fq = (val: CircuitValue256): Bn254FqPoint =>{
         return this._halo2lib.load_bn254_fq(toJsCircuitValue256(val));
     }
+
+    /**
+     * 
+     * @param val 
+     * @returns `val` in hi-lo form
+     */
     convertBn254FqToCircuitValue256 = (val: Bn254FqPoint) => {
         const _val = val.to_circuit_value_256(this._halo2lib);
         return new CircuitValue256(this._halo2lib, { hi: this.Cell(_val.hi), lo: this.Cell(_val.lo) });

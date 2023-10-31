@@ -1,4 +1,3 @@
-import { CircuitValue } from "./CircuitValue";
 import { CircuitValue256 } from "./CircuitValue256";
 
 export interface CircuitBn254Fq2 {
