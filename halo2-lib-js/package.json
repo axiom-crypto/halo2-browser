@@ -30,7 +30,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@axiom-crypto/halo2-wasm": "link:../halo2-wasm/pkg",
+    "@axiom-crypto/halo2-wasm": "0.2.7",
     "ethers": "^6.8.0",
     "prettier": "1.18.2"
   },
