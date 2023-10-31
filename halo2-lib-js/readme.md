@@ -4,7 +4,7 @@ This repository aims to streamline the process of writing circuits in Typescript
 
 ## Getting Started
 
-To build your own `halo2-wasm` module, see this [README](https://github.com/axiom-crypto/halo2-wasm). 
+To build your own `halo2-wasm` module, see this [README](../halo2-wasm). 
 
 Install `halo2-js` in your own JS/TS project with
 ```
