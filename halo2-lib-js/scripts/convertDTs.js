@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const halo2libString = fs.readFileSync('src/shared/docs/halo2Docs.d.ts', 'utf8');
+const halo2libString = fs.readFileSync('src/shared/docs/build.d.ts', 'utf8');
 const filteredHalo2libString = halo2libString
   .split('\n')
   .filter(line => !line.trim().startsWith('import'))

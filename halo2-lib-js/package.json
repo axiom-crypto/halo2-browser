@@ -4,7 +4,8 @@
   "description": "Halo2 Javascript library",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf ./dist && node ./scripts/convertDTs.js && tsc && node ./scripts/postTsc.js"
+    "build": "rm -rf ./dist && pnpm build:docs && tsc && node ./scripts/postTsc.js",
+    "build:docs": "./node_modules/.bin/dts-bundle-generator src/shared/docs/halo2Docs.d.ts -o src/shared/docs/build.d.ts --external-inlines=@axiom-crypto/halo2-wasm && node ./scripts/convertDTs.js"
   },
   "keywords": [
     "axiom",
