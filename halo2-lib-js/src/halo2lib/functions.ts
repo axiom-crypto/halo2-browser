@@ -2,9 +2,9 @@ import { Halo2LibWasm, Halo2Wasm } from "@axiom-crypto/halo2-wasm/web";
 import { convertInput, joinArrays } from "../shared/utils";
 import { CircuitValue } from "./CircuitValue";
 import { RawCircuitInput } from "../shared/types";
-import {Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitValue256} from "@axiom-crypto/halo2-wasm/web/halo2_wasm";
+import {Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitSecp256k1Affine, JsCircuitValue256, Secp256k1AffinePoint} from "@axiom-crypto/halo2-wasm/web/halo2_wasm";
 import { CircuitValue256 } from "./CircuitValue256";
-import { CircuitBn254Fq2, CircuitBn254G1Affine, CircuitBn254G2Affine } from "./ecc";
+import { CircuitBn254Fq2, CircuitBn254G1Affine, CircuitBn254G2Affine, CircuitSecp256k1Affine } from "./ecc";
 
 export class Halo2Lib {
 
@@ -468,6 +468,27 @@ export class Halo2Lib {
     bn254PairingCheck = (lhsG1: Bn254G1AffinePoint, lhsG2: Bn254G2AffinePoint, rhsG1: Bn254G1AffinePoint, rhsG2: Bn254G2AffinePoint): CircuitValue => {
         return this.Cell(this._halo2lib.bn254_pairing_check(lhsG1, lhsG2, rhsG1, rhsG2));
     }
+
+    /**
+     * @param pubkey The public key to load, in the form of an affine elliptic curve point `(x, y)` where `x, y` have type `CircuitValue256`. The hi, lo values of each `CircuitValue256` must have been constrained to be `uint128`s.
+     * @returns `Secp256k1AffinePoint`, the public key as a loaded elliptic curve point. This has been constrained to lie on the curve. The public key is constrained to not be the identity (0, 0).
+     */
+    loadSecp256k1Pubkey = (pubkey: CircuitSecp256k1Affine): Secp256k1AffinePoint => {
+        return this._halo2lib.load_secp256k1_pubkey(toJsCircuitSecp256k1Affine(pubkey));
+    }
+
+    /**
+     * 
+     * Verifies the ECDSA signature `(r, s)` with message hash `msgHash` using the secp256k1 public key `pubkey`. Returns 1 if the signature is valid, 0 otherwise.
+     * @param pubkey 
+     * @param r 
+     * @param s 
+     * @param msgHash 
+     * @returns 
+     */
+    verifySecp256k1ECDSASignature = (pubkey: Secp256k1AffinePoint, r: CircuitValue256, s: CircuitValue256, msgHash: CircuitValue256): CircuitValue => {
+        return this.Cell(this._halo2lib.verify_secp256k1_ecdsa_signature(pubkey, toJsCircuitValue256(r), toJsCircuitValue256(s), toJsCircuitValue256(msgHash)));
+    }
 }
 
 function toJsCircuitValue256(val: CircuitValue256): JsCircuitValue256 {
@@ -486,4 +507,8 @@ function toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine): JsCircuitBn254G2
     const x = toJsCircuitBn254Fq2(point.x);
     const y = toJsCircuitBn254Fq2(point.y);
     return new JsCircuitBn254G2Affine(x,y);
+}
+
+function toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine): JsCircuitSecp256k1Affine{
+    return new JsCircuitSecp256k1Affine(toJsCircuitValue256(point.x), toJsCircuitValue256(point.y));
 }
