@@ -410,6 +410,41 @@ impl Halo2LibWasm {
         self.to_js_assigned_value(res)
     }
 
+    pub fn to_js_circuit_value_256(&self, hi: usize, lo: usize) -> JsCircuitValue256 {
+        JsCircuitValue256 {
+            hi,
+            lo
+        }
+    }
+
+    pub fn to_js_circuit_bn254_g1_affine(&self, x: JsCircuitValue256, y: JsCircuitValue256) -> JsCircuitBn254G1Affine {
+        JsCircuitBn254G1Affine {
+            x,
+            y
+        }
+    }
+
+    pub fn to_js_circuit_bn254_fq2(&self, c0: JsCircuitValue256, c1: JsCircuitValue256) -> JsCircuitBn254Fq2 {
+        JsCircuitBn254Fq2 {
+            c0,
+            c1
+        }
+    }
+
+    pub fn to_js_circuit_bn254_g2_affine(&self, x: JsCircuitBn254Fq2, y: JsCircuitBn254Fq2) -> JsCircuitBn254G2Affine {
+        JsCircuitBn254G2Affine {
+            x,
+            y
+        }
+    }
+
+    pub fn to_js_circuit_secp256k1_affine(&self, x: JsCircuitValue256, y: JsCircuitValue256) -> JsCircuitSecp256k1Affine {
+        JsCircuitSecp256k1Affine {
+            x,
+            y
+        }
+    }
+
     // private implementations to save recreating chips each time:
 
     // Doesn't range check hi,lo

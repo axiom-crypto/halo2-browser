@@ -409,7 +409,7 @@ export class Halo2Lib {
      * @returns `Bn254FqPoint` whose internals are opaque to the user.
      */
     loadBn254Fq = (val: CircuitValue256): Bn254FqPoint =>{
-        return this._halo2lib.load_bn254_fq(toJsCircuitValue256(val));
+        return this._halo2lib.load_bn254_fq(this._toJsCircuitValue256(val));
     }
 
     /**
@@ -427,7 +427,7 @@ export class Halo2Lib {
      * @returns `Bn254G1AffinePoint`, which has been constrained to lie on the curve. Currently this point is not allowed to be identity (0, 0).
      */
     loadBn254G1 = (point: CircuitBn254G1Affine): Bn254G1AffinePoint => {
-        return this._halo2lib.load_bn254_g1(toJsCircuitBn254G1Affine(point));
+        return this._halo2lib.load_bn254_g1(this._toJsCircuitBn254G1Affine(point));
     }
 
     /**
@@ -437,7 +437,7 @@ export class Halo2Lib {
      * @returns The sum of all these points as `Bn254G1AffinePoint`.
      */
     bn254G1Sum = (points: Array<CircuitBn254G1Affine>): Bn254G1AffinePoint => {
-        const _points = points.map(toJsCircuitBn254G1Affine);
+        const _points = points.map(this._toJsCircuitBn254G1Affine);
         return this._halo2lib.bn254_g1_sum(_points);
     };
 
@@ -450,7 +450,7 @@ export class Halo2Lib {
      */
 
     bn254G1SubUnequal = (g1Point1: CircuitBn254G1Affine, g1Point2: CircuitBn254G1Affine): Bn254G1AffinePoint => {
-        return this._halo2lib.bn254_g1_sub_unequal(toJsCircuitBn254G1Affine(g1Point1), toJsCircuitBn254G1Affine(g1Point2));
+        return this._halo2lib.bn254_g1_sub_unequal(this._toJsCircuitBn254G1Affine(g1Point1), this._toJsCircuitBn254G1Affine(g1Point2));
     };
 
     /**
@@ -458,7 +458,7 @@ export class Halo2Lib {
      * @returns `Bn254G2AffinePoint`, which has been constrained to lie on the curve. Currently this point is not allowed to be identity (Fq2(0), Fq2(0)).
      */
     loadBn254G2 = (point: CircuitBn254G2Affine): Bn254G2AffinePoint => {    
-        return this._halo2lib.load_bn254_g2(toJsCircuitBn254G2Affine(point));
+        return this._halo2lib.load_bn254_g2(this._toJsCircuitBn254G2Affine(point));
     }
 
     /**
@@ -468,7 +468,7 @@ export class Halo2Lib {
      * @returns The sum of all these points as `Bn254G2AffinePoint`.
      */
     bn254G2Sum = (points: Array<CircuitBn254G2Affine>): Bn254G2AffinePoint => {
-        const _points = points.map(toJsCircuitBn254G2Affine);
+        const _points = points.map(this._toJsCircuitBn254G2Affine);
         return this._halo2lib.bn254_g2_sum(_points);
     }
 
@@ -491,7 +491,7 @@ export class Halo2Lib {
      * @returns `Secp256k1AffinePoint`, the public key as a loaded elliptic curve point. This has been constrained to lie on the curve. The public key is constrained to not be the identity (0, 0).
      */
     loadSecp256k1Pubkey = (pubkey: CircuitSecp256k1Affine): Secp256k1AffinePoint => {
-        return this._halo2lib.load_secp256k1_pubkey(toJsCircuitSecp256k1Affine(pubkey));
+        return this._halo2lib.load_secp256k1_pubkey(this._toJsCircuitSecp256k1Affine(pubkey));
     }
 
     /**
@@ -504,28 +504,26 @@ export class Halo2Lib {
      * @returns 
      */
     verifySecp256k1ECDSASignature = (pubkey: Secp256k1AffinePoint, r: CircuitValue256, s: CircuitValue256, msgHash: CircuitValue256): CircuitValue => {
-        return this.Cell(this._halo2lib.verify_secp256k1_ecdsa_signature(pubkey, toJsCircuitValue256(r), toJsCircuitValue256(s), toJsCircuitValue256(msgHash)));
+        return this.Cell(this._halo2lib.verify_secp256k1_ecdsa_signature(pubkey, this._toJsCircuitValue256(r), this._toJsCircuitValue256(s), this._toJsCircuitValue256(msgHash)));
     }
-}
 
-function toJsCircuitValue256(val: CircuitValue256): JsCircuitValue256 {
-    return new JsCircuitValue256(val.hi().cell(), val.lo().cell());
-}
+    _toJsCircuitValue256(val: CircuitValue256) {
+        return this._halo2lib.to_js_circuit_value_256(val.hi().cell(), val.lo().cell());
+    }
 
-function toJsCircuitBn254G1Affine(point: CircuitBn254G1Affine): JsCircuitBn254G1Affine {
-    return new JsCircuitBn254G1Affine(toJsCircuitValue256(point.x), toJsCircuitValue256(point.y));
-}
+    _toJsCircuitBn254G1Affine(point: CircuitBn254G1Affine) {
+        return this._halo2lib.to_js_circuit_bn254_g1_affine(this._toJsCircuitValue256(point.x), this._toJsCircuitValue256(point.y));
+    }
 
-function toJsCircuitBn254Fq2(point: CircuitBn254Fq2): JsCircuitBn254Fq2 {
-    return new JsCircuitBn254Fq2(toJsCircuitValue256(point.c0), toJsCircuitValue256(point.c1));
-}
+    _toJsCircuitBn254Fq2(point: CircuitBn254Fq2) {
+        return this._halo2lib.to_js_circuit_bn254_fq2(this._toJsCircuitValue256(point.c0), this._toJsCircuitValue256(point.c1));
+    }
 
-function toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine): JsCircuitBn254G2Affine {
-    const x = toJsCircuitBn254Fq2(point.x);
-    const y = toJsCircuitBn254Fq2(point.y);
-    return new JsCircuitBn254G2Affine(x,y);
-}
+    _toJsCircuitBn254G2Affine(point: CircuitBn254G2Affine) {
+        return this._halo2lib.to_js_circuit_bn254_g2_affine(this._toJsCircuitBn254Fq2(point.x), this._toJsCircuitBn254Fq2(point.y));
+    }
 
-function toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine): JsCircuitSecp256k1Affine{
-    return new JsCircuitSecp256k1Affine(toJsCircuitValue256(point.x), toJsCircuitValue256(point.y));
+    _toJsCircuitSecp256k1Affine(point: CircuitSecp256k1Affine) {
+        return this._halo2lib.to_js_circuit_secp256k1_affine(this._toJsCircuitValue256(point.x), this._toJsCircuitValue256(point.y));
+    }
 }
