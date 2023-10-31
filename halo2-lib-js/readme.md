@@ -14,7 +14,7 @@ or use your favorite package manager (npm, yarn, etc.).
 
 ## Setting up the `CircuitScaffold`
 
-The `halo2-wasm` package already has an abstract `CircuitScaffold` that must implemented. Here is an example using `Halo2LibWasm` and `Halo2CircuitRunner`:
+The `halo2-wasm` package already has an abstract `CircuitScaffold` that must be implemented. Here is an example using `Halo2LibWasm` and `Halo2CircuitRunner`:
 
 ### Web
 
