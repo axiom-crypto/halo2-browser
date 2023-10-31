@@ -390,6 +390,17 @@ export class Halo2Lib {
         return this.Cell(res);
     }
 
+    /**
+     * Creates new `CircuitValue256` and range checks `hi, lo` to be `uint128`s.
+     * @param hi 
+     * @param lo 
+     * @returns 
+     */
+    newCircuitValue256 = (hi: CircuitValue, lo: CircuitValue): CircuitValue256 => {
+        this.rangeCheck(hi, 128);
+        this.rangeCheck(lo, 128);
+        return new CircuitValue256(this._halo2lib, { hi, lo });
+    }
     // ========== BN254 Elliptic Curve functions ============
 
     /**
