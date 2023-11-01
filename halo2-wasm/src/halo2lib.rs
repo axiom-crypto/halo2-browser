@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, str::FromStr};
 use std::rc::Rc;
 
 use halo2_base::{
@@ -320,7 +320,7 @@ impl Halo2LibWasm {
 
     pub fn div_mod(&mut self, a: usize, b: &str, size: &str) -> Vec<u32> {
         let a = self.get_assigned_value(a);
-        let b = BigUint::parse_bytes(b.as_bytes(), 10).unwrap();
+        let b = BigUint::from_str(b).unwrap();
         let size: usize = size.parse().unwrap();
         let out = self
             .range
