@@ -42,6 +42,7 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
         const parsedInputs = parseInputs(inputs);
         const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
         await fn(parsedInputs);
+        circuit.assignInstances();
 
         autoConfigCircuit(circuit, config);
         clear();
@@ -62,6 +63,7 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
         let stringifiedInputs = JSON.stringify(inputs);
         let parsedInputs = parseInputs(stringifiedInputs);
         await f(halo2Lib, parsedInputs);
+        circuit.assignInstances();
     }
 
     return Object.freeze({

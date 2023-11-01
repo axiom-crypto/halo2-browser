@@ -253,13 +253,11 @@ impl Halo2LibWasm {
             .iter()
             .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
             .collect();
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let g1_points: Vec<_> = g1_points
             .into_iter()
             .map(|point| self.load_bn254_g1_impl(&g1_chip, point).0)
             .collect();
-        let sum = g1_chip.sum::<Bn254G1Affine>(ctx, g1_points);
+        let sum = g1_chip.sum::<Bn254G1Affine>(self.builder.borrow_mut().main(0), g1_points);
         Bn254G1AffinePoint(sum)
     }
 
@@ -274,13 +272,16 @@ impl Halo2LibWasm {
     ) -> Bn254G1AffinePoint {
         let fq_chip = self.bn254_fq_chip();
         let g1_chip = EccChip::new(&fq_chip);
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let g1_point_1_loaded: EcPoint<Fr, FqPoint> =
             self.load_bn254_g1_impl(&g1_chip, g1_point_1).0;
         let g1_point_2_loaded: EcPoint<Fr, FqPoint> =
             self.load_bn254_g1_impl(&g1_chip, g1_point_2).0;
-        let diff = g1_chip.sub_unequal(ctx, g1_point_1_loaded, g1_point_2_loaded, true);
+        let diff = g1_chip.sub_unequal(
+            self.builder.borrow_mut().main(0),
+            g1_point_1_loaded,
+            g1_point_2_loaded,
+            true,
+        );
         Bn254G1AffinePoint(diff)
     }
 
@@ -303,13 +304,11 @@ impl Halo2LibWasm {
             .iter()
             .map(|x| serde_wasm_bindgen::from_value(x).unwrap())
             .collect();
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let g2_points: Vec<_> = g2_points
             .into_iter()
             .map(|point| self.load_bn254_g2_impl(&g2_chip, point).0)
             .collect();
-        let sum = g2_chip.sum::<Bn254G2Affine>(ctx, g2_points);
+        let sum = g2_chip.sum::<Bn254G2Affine>(self.builder.borrow_mut().main(0), g2_points);
         Bn254G2AffinePoint(sum)
     }
     /// Verifies that e(lhs_g1, lhs_g2) = e(rhs_g1, rhs_g2) by checking e(lhs_g1, lhs_g2)*e(-rhs_g1, rhs_g2) === 1
@@ -342,14 +341,12 @@ impl Halo2LibWasm {
     /// Pubkey is a point on
     pub fn load_secp256k1_pubkey(&self, point: JsCircuitSecp256k1Affine) -> Secp256k1AffinePoint {
         let fp_chip = self.secp256k1_fp_chip();
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let [x, y] =
             [point.x, point.y].map(|c| self.load_generic_fp_impl::<Secp256k1Fp>(&fp_chip, c));
         let pt = EcPoint::new(x, y);
         let chip = EccChip::new(&fp_chip);
         // this prevents pubkey from being identity point:
-        chip.assert_is_on_curve::<Secp256k1Affine>(ctx, &pt);
+        chip.assert_is_on_curve::<Secp256k1Affine>(self.builder.borrow_mut().main(0), &pt);
         Secp256k1AffinePoint(pt)
     }
 
@@ -413,6 +410,41 @@ impl Halo2LibWasm {
         self.to_js_assigned_value(res)
     }
 
+    pub fn to_js_circuit_value_256(&self, hi: usize, lo: usize) -> JsCircuitValue256 {
+        JsCircuitValue256 {
+            hi,
+            lo
+        }
+    }
+
+    pub fn to_js_circuit_bn254_g1_affine(&self, x: JsCircuitValue256, y: JsCircuitValue256) -> JsCircuitBn254G1Affine {
+        JsCircuitBn254G1Affine {
+            x,
+            y
+        }
+    }
+
+    pub fn to_js_circuit_bn254_fq2(&self, c0: JsCircuitValue256, c1: JsCircuitValue256) -> JsCircuitBn254Fq2 {
+        JsCircuitBn254Fq2 {
+            c0,
+            c1
+        }
+    }
+
+    pub fn to_js_circuit_bn254_g2_affine(&self, x: JsCircuitBn254Fq2, y: JsCircuitBn254Fq2) -> JsCircuitBn254G2Affine {
+        JsCircuitBn254G2Affine {
+            x,
+            y
+        }
+    }
+
+    pub fn to_js_circuit_secp256k1_affine(&self, x: JsCircuitValue256, y: JsCircuitValue256) -> JsCircuitSecp256k1Affine {
+        JsCircuitSecp256k1Affine {
+            x,
+            y
+        }
+    }
+
     // private implementations to save recreating chips each time:
 
     // Doesn't range check hi,lo
@@ -440,12 +472,10 @@ impl Halo2LibWasm {
         g1_chip: &EccChip<Fr, Bn254FqChip<Fr>>,
         point: JsCircuitBn254G1Affine,
     ) -> Bn254G1AffinePoint {
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let [x, y] = [point.x, point.y]
             .map(|c| self.load_generic_fp_impl::<Bn254Fq>(g1_chip.field_chip(), c));
         let pt = EcPoint::new(x, y);
-        g1_chip.assert_is_on_curve::<Bn254G1Affine>(ctx, &pt);
+        g1_chip.assert_is_on_curve::<Bn254G1Affine>(self.builder.borrow_mut().main(0), &pt);
         Bn254G1AffinePoint(pt)
     }
     /// Doesn't range check limbs of g2_point
@@ -455,15 +485,13 @@ impl Halo2LibWasm {
         point: JsCircuitBn254G2Affine,
     ) -> Bn254G2AffinePoint {
         let fq_chip = g2_chip.field_chip().fp_chip();
-        let mut builder = self.builder.borrow_mut();
-        let ctx = builder.main(0);
         let [x, y] = [point.x, point.y].map(|c| {
             let c0 = self.load_generic_fp_impl::<Bn254Fq>(fq_chip, c.c0);
             let c1 = self.load_generic_fp_impl::<Bn254Fq>(fq_chip, c.c1);
             FieldVector(vec![c0, c1])
         });
         let pt = EcPoint::new(x, y);
-        g2_chip.assert_is_on_curve::<Bn254G2Affine>(ctx, &pt);
+        g2_chip.assert_is_on_curve::<Bn254G2Affine>(self.builder.borrow_mut().main(0), &pt);
         Bn254G2AffinePoint(pt)
     }
 }
@@ -479,7 +507,7 @@ fn constrain_limbs_equality<F: BigPrimeField>(
     assert!(limb_bits <= 128);
     assert!(limb_bits > 64);
     // limb_bits, 128 - limb_bits
-    let (limb0, tmp0) = range.div_mod(ctx, lo, BigUint::one() << limb_bits, 128);
+    let (tmp0, limb0) = range.div_mod(ctx, lo, BigUint::one() << limb_bits, 128);
     // limb_bits - (128 - limb_bits) = 2 * limb_bits - 128 > 0
     let rem_bits = limb_bits - (128 - limb_bits);
     let (limb2, tmp1) = range.div_mod(ctx, hi, BigUint::one() << rem_bits, 128);
@@ -501,7 +529,7 @@ fn convert_3limbs88bits_to_hi_lo(
     let range = &lib_wasm.range;
     let gate = &range.gate;
     let ctx = builder.main(0);
-    let (limb1_lo, limb1_hi) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);
+    let (limb1_hi, limb1_lo) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);
     let multiplier = biguint_to_fe(&(BigUint::one() << 88));
     let lo = gate.mul_add(ctx, limb1_lo, Constant(multiplier), limbs[0]);
     let multiplier = biguint_to_fe(&(BigUint::one() << hi_bits));
