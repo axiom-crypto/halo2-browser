@@ -437,7 +437,10 @@ export class Halo2Lib {
      * @returns The sum of all these points as `Bn254G1AffinePoint`.
      */
     bn254G1Sum = (points: Array<CircuitBn254G1Affine>): Bn254G1AffinePoint => {
-        const _points = points.map(this._toJsCircuitBn254G1Affine);
+        const _points = [];
+        for(let i = 0; i < points.length; i++) {
+            _points.push(this._toJsCircuitBn254G1Affine(points[i]));
+        }
         return this._halo2lib.bn254_g1_sum(_points);
     };
 
@@ -468,7 +471,10 @@ export class Halo2Lib {
      * @returns The sum of all these points as `Bn254G2AffinePoint`.
      */
     bn254G2Sum = (points: Array<CircuitBn254G2Affine>): Bn254G2AffinePoint => {
-        const _points = points.map(this._toJsCircuitBn254G2Affine);
+        const _points = [];
+        for(let i = 0; i < points.length; i++) {
+            _points.push(this._toJsCircuitBn254G2Affine(points[i]));
+        }
         return this._halo2lib.bn254_g2_sum(_points);
     }
 
