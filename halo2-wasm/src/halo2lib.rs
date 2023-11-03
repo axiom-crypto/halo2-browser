@@ -15,6 +15,8 @@ use halo2_base::{
 };
 use itertools::Itertools;
 use num_bigint::BigUint;
+use num_integer::Integer;
+use num_traits::One;
 use wasm_bindgen::prelude::*;
 
 use crate::Halo2Wasm;
@@ -344,10 +346,7 @@ impl Halo2LibWasm {
         let a_lo = self.builder.borrow_mut().main(0).load_witness(a_lo);
         let a_hi = self.builder.borrow_mut().main(0).load_witness(a_hi);
 
-        let two_pow_128 = self.gate.pow_of_two()[128];
-        let r = modulus::<Fr>();
-        let a_hi_max = r.clone() / fe_to_biguint(&two_pow_128);
-        let a_lo_max = r % fe_to_biguint(&two_pow_128);
+        let (a_hi_max, a_lo_max) = modulus::<Fr>().div_mod_floor(&(BigUint::one() << 128));
 
         //check a_hi < r // 2**128
         let check_1 = self.range.is_big_less_than_safe(
@@ -358,14 +357,16 @@ impl Halo2LibWasm {
 
         //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
         let a_hi_max_fe = biguint_to_fe::<Fr>(&a_hi_max);
+        let a_lo_max_fe = biguint_to_fe::<Fr>(&a_lo_max);
         let check_2_hi = self.gate.is_equal(
             self.builder.borrow_mut().main(0),
             a_hi,
             Constant(a_hi_max_fe),
         );
+        self.range.range_check(self.builder.borrow_mut().main(0), a_lo, 128);
         let check_2_lo =
             self.range
-                .is_big_less_than_safe(self.builder.borrow_mut().main(0), a_lo, a_lo_max);
+                .is_less_than(self.builder.borrow_mut().main(0), a_lo, Constant(a_lo_max_fe), 128);
         let check_2 = self
             .gate
             .and(self.builder.borrow_mut().main(0), check_2_hi, check_2_lo);
@@ -373,22 +374,13 @@ impl Halo2LibWasm {
         //constrain (check_1 || check_2) == 1
         let check = self
             .gate
-            .or(self.builder.borrow_mut().main(0), check_1, check_2);
-        let one = self.builder.borrow_mut().main(0).load_constant(Fr::one());
-        self.builder
-            .borrow_mut()
-            .main(0)
-            .constrain_equal(&check, &one);
-
-        self.range
-            .range_check(self.builder.borrow_mut().main(0), a_lo, 128);
-        self.range
-            .range_check(self.builder.borrow_mut().main(0), a_hi, 126);
+            .add(self.builder.borrow_mut().main(0), check_1, check_2);
+        self.gate.assert_is_const(self.builder.borrow_mut().main(0), &check, &Fr::one());
 
         let a_reconstructed = self.gate.mul_add(
             self.builder.borrow_mut().main(0),
             a_hi,
-            Constant(two_pow_128),
+            Constant(self.gate.pow_of_two()[128]),
             a_lo,
         );
         self.builder
