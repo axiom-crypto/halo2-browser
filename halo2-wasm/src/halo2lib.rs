@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, str::FromStr};
 use std::rc::Rc;
 
 use halo2_base::{
@@ -11,9 +11,12 @@ use halo2_base::{
     poseidon::hasher::{spec::OptimizedPoseidonSpec, PoseidonHasher},
     utils::{biguint_to_fe, fe_to_biguint, modulus},
     AssignedValue, Context,
-    QuantumCell::Existing,
+    QuantumCell::{Constant, Existing},
 };
 use itertools::Itertools;
+use num_bigint::BigUint;
+use num_integer::Integer;
+use num_traits::One;
 use wasm_bindgen::prelude::*;
 
 use crate::Halo2Wasm;
@@ -319,12 +322,73 @@ impl Halo2LibWasm {
 
     pub fn div_mod(&mut self, a: usize, b: &str, size: &str) -> Vec<u32> {
         let a = self.get_assigned_value(a);
-        let b: usize = b.parse().unwrap();
+        let b = BigUint::from_str(b).unwrap();
         let size: usize = size.parse().unwrap();
         let out = self
             .range
             .div_mod(self.builder.borrow_mut().main(0), a, b, size);
         let out = vec![out.0, out.1];
+        self.to_js_assigned_values(out)
+    }
+
+    pub fn to_hi_lo(&mut self, a: usize) -> Vec<u32> {
+        let a = self.get_assigned_value(a);
+        let a_val = a.value();
+        let a_bytes = a_val.to_bytes();
+
+        let mut a_lo_bytes = [0u8; 32];
+        let mut a_hi_bytes = [0u8; 32];
+        a_lo_bytes[..16].copy_from_slice(&a_bytes[..16]);
+        a_hi_bytes[..16].copy_from_slice(&a_bytes[16..]);
+        let a_lo = Fr::from_bytes(&a_lo_bytes).unwrap();
+        let a_hi = Fr::from_bytes(&a_hi_bytes).unwrap();
+
+        let a_lo = self.builder.borrow_mut().main(0).load_witness(a_lo);
+        let a_hi = self.builder.borrow_mut().main(0).load_witness(a_hi);
+
+        let (a_hi_max, a_lo_max) = modulus::<Fr>().div_mod_floor(&(BigUint::one() << 128));
+
+        //check a_hi < r // 2**128
+        let check_1 = self.range.is_big_less_than_safe(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            a_hi_max.clone(),
+        );
+
+        //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
+        let a_hi_max_fe = biguint_to_fe::<Fr>(&a_hi_max);
+        let a_lo_max_fe = biguint_to_fe::<Fr>(&a_lo_max);
+        let check_2_hi = self.gate.is_equal(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            Constant(a_hi_max_fe),
+        );
+        self.range.range_check(self.builder.borrow_mut().main(0), a_lo, 128);
+        let check_2_lo =
+            self.range
+                .is_less_than(self.builder.borrow_mut().main(0), a_lo, Constant(a_lo_max_fe), 128);
+        let check_2 = self
+            .gate
+            .and(self.builder.borrow_mut().main(0), check_2_hi, check_2_lo);
+
+        //constrain (check_1 || check_2) == 1
+        let check = self
+            .gate
+            .add(self.builder.borrow_mut().main(0), check_1, check_2);
+        self.gate.assert_is_const(self.builder.borrow_mut().main(0), &check, &Fr::one());
+
+        let a_reconstructed = self.gate.mul_add(
+            self.builder.borrow_mut().main(0),
+            a_hi,
+            Constant(self.gate.pow_of_two()[128]),
+            a_lo,
+        );
+        self.builder
+            .borrow_mut()
+            .main(0)
+            .constrain_equal(&a, &a_reconstructed);
+
+        let out = vec![a_hi, a_lo];
         self.to_js_assigned_values(out)
     }
 
