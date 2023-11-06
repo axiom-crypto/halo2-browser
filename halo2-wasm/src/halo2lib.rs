@@ -1,5 +1,5 @@
-use std::{cell::RefCell, str::FromStr};
 use std::rc::Rc;
+use std::{cell::RefCell, str::FromStr};
 
 use halo2_base::{
     gates::{
@@ -346,27 +346,48 @@ impl Halo2LibWasm {
         let a_lo = self.builder.borrow_mut().main(0).load_witness(a_lo);
         let a_hi = self.builder.borrow_mut().main(0).load_witness(a_hi);
 
-        let (a_hi_max, a_lo_max) = modulus::<Fr>().div_mod_floor(&(BigUint::one() << 128));
+        let a_reconstructed = self.check_hi_lo(a_hi, a_lo);
 
-        //check a_hi < r // 2**128
-        let check_1 = self.range.is_big_less_than_safe(
-            self.builder.borrow_mut().main(0),
-            a_hi,
-            a_hi_max.clone(),
-        );
+        self.builder
+            .borrow_mut()
+            .main(0)
+            .constrain_equal(&a, &a_reconstructed);
 
-        //check (a_hi == r // 2 ** 128 AND a_lo < r % 2**128)
-        let a_hi_max_fe = biguint_to_fe::<Fr>(&a_hi_max);
-        let a_lo_max_fe = biguint_to_fe::<Fr>(&a_lo_max);
-        let check_2_hi = self.gate.is_equal(
-            self.builder.borrow_mut().main(0),
-            a_hi,
-            Constant(a_hi_max_fe),
-        );
-        self.range.range_check(self.builder.borrow_mut().main(0), a_lo, 128);
-        let check_2_lo =
+        let out = vec![a_hi, a_lo];
+        self.to_js_assigned_values(out)
+    }
+
+    pub fn from_hi_lo(&mut self, hi: usize, lo: usize) -> usize {
+        let hi = self.get_assigned_value(hi);
+        let lo = self.get_assigned_value(lo);
+
+        let out = self.check_hi_lo(hi, lo);
+
+        self.to_js_assigned_value(out)
+    }
+
+    fn check_hi_lo(&mut self, hi: AssignedValue<Fr>, lo: AssignedValue<Fr>) -> AssignedValue<Fr> {
+        let (hi_max, lo_max) = modulus::<Fr>().div_mod_floor(&(BigUint::one() << 128));
+
+        //check hi < r // 2**128
+        let check_1 =
             self.range
-                .is_less_than(self.builder.borrow_mut().main(0), a_lo, Constant(a_lo_max_fe), 128);
+                .is_big_less_than_safe(self.builder.borrow_mut().main(0), hi, hi_max.clone());
+
+        //check (hi == r // 2 ** 128 AND lo < r % 2**128)
+        let hi_max_fe = biguint_to_fe::<Fr>(&hi_max);
+        let lo_max_fe = biguint_to_fe::<Fr>(&lo_max);
+        let check_2_hi =
+            self.gate
+                .is_equal(self.builder.borrow_mut().main(0), hi, Constant(hi_max_fe));
+        self.range
+            .range_check(self.builder.borrow_mut().main(0), lo, 128);
+        let check_2_lo = self.range.is_less_than(
+            self.builder.borrow_mut().main(0),
+            lo,
+            Constant(lo_max_fe),
+            128,
+        );
         let check_2 = self
             .gate
             .and(self.builder.borrow_mut().main(0), check_2_hi, check_2_lo);
@@ -375,21 +396,16 @@ impl Halo2LibWasm {
         let check = self
             .gate
             .add(self.builder.borrow_mut().main(0), check_1, check_2);
-        self.gate.assert_is_const(self.builder.borrow_mut().main(0), &check, &Fr::one());
+        self.gate
+            .assert_is_const(self.builder.borrow_mut().main(0), &check, &Fr::one());
 
-        let a_reconstructed = self.gate.mul_add(
+        let combined = self.gate.mul_add(
             self.builder.borrow_mut().main(0),
-            a_hi,
+            hi,
             Constant(self.gate.pow_of_two()[128]),
-            a_lo,
+            lo,
         );
-        self.builder
-            .borrow_mut()
-            .main(0)
-            .constrain_equal(&a, &a_reconstructed);
-
-        let out = vec![a_hi, a_lo];
-        self.to_js_assigned_values(out)
+        combined
     }
 
     pub fn div_mod_var(&mut self, a: usize, b: usize, a_size: &str, b_size: &str) -> Vec<u32> {
