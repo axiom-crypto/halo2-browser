@@ -23,11 +23,11 @@ use crate::Halo2Wasm;
 
 pub mod ecc;
 
-const T: usize = 3;
-const RATE: usize = 2;
-const R_F: usize = 8;
-const R_P: usize = 57;
-const SECURE_MDS: usize = 0;
+pub const T: usize = 3;
+pub const RATE: usize = 2;
+pub const R_F: usize = 8;
+pub const R_P: usize = 57;
+pub const SECURE_MDS: usize = 0;
 type Fr = ecc::Bn254Fr;
 // TODO: use wasm_bindgen to sync with js CircuitValue type
 type JsCircuitValue = usize;
