@@ -5,8 +5,9 @@ defaults:
     working-directory: halo2-wasm
 
 on:
-  paths:
-    - "halo2-wasm/**"
+  push: 
+    paths:
+      - "halo2-wasm/**"
 
 jobs:
   halo2-wasm-tests:
