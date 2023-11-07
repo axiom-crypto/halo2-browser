@@ -1,0 +1,19 @@
+name: halo2-wasm Tests
+
+defaults:
+  run:
+    working-directory: halo2-wasm
+
+on:
+  paths:
+    - "halo2-wasm/**"
+
+jobs:
+  halo2-wasm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: cargo build --verbose
+      - name: Test
+        run: cargo test
