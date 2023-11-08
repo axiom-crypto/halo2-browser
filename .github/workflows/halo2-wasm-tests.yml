@@ -1,5 +1,7 @@
 name: halo2-wasm Tests
 
+on: push
+
 defaults:
   run:
     working-directory: halo2-wasm
