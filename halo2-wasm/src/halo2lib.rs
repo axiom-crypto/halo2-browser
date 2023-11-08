@@ -331,6 +331,11 @@ impl Halo2LibWasm {
         self.to_js_assigned_values(out)
     }
 
+    /// Returns a 256-bit hi-lo pair from a single CircuitValue
+    /// 
+    /// See `check_hi_lo` for what is constrained.
+    /// 
+    /// * `a`: the CircuitValue to split into hi-lo
     pub fn to_hi_lo(&mut self, a: usize) -> Vec<u32> {
         let a = self.get_assigned_value(a);
         let a_val = a.value();
@@ -357,6 +362,13 @@ impl Halo2LibWasm {
         self.to_js_assigned_values(out)
     }
 
+    /// Returns a single CircuitValue from a hi-lo pair
+    /// 
+    /// NOTE: this can fail if the hi-lo pair is greater than the Fr modulus.
+    /// See `check_hi_lo` for what is constrained.
+    /// 
+    /// * `hi`: the high 128 bits of the CircuitValue
+    /// * `lo`: the low 128 bits of the CircuitValue
     pub fn from_hi_lo(&mut self, hi: usize, lo: usize) -> usize {
         let hi = self.get_assigned_value(hi);
         let lo = self.get_assigned_value(lo);
@@ -366,6 +378,11 @@ impl Halo2LibWasm {
         self.to_js_assigned_value(out)
     }
 
+    /// Constrains and returns a single CircuitValue from a hi-lo pair
+    /// 
+    /// Constrains (hi < r // 2^128) OR (hi == r // 2^128 AND lo < r % 2^128)
+    /// * `hi`: the high 128 bits of the CircuitValue
+    /// * `lo`: the low 128 bits of the CircuitValue
     fn check_hi_lo(&mut self, hi: AssignedValue<Fr>, lo: AssignedValue<Fr>) -> AssignedValue<Fr> {
         let (hi_max, lo_max) = modulus::<Fr>().div_mod_floor(&(BigUint::one() << 128));
 
