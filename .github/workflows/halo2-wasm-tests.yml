@@ -4,11 +4,6 @@ defaults:
   run:
     working-directory: halo2-wasm
 
-on:
-  push: 
-    paths:
-      - "halo2-wasm/**"
-
 jobs:
   halo2-wasm-tests:
     runs-on: ubuntu-latest
