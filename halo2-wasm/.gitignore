@@ -6,3 +6,4 @@ pkg
 dist
 .vscode
 node_modules
+*.bin
