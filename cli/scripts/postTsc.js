@@ -22,8 +22,8 @@ function copyPackageJson() {
 }
 
 function genReadme() {
-    const commands = ["mock", "keygen", "prove", "verify"]
-    let readme = `# halo2-wasm-cli\n\nSee an example circuit the CLI takes in at [src/examples/circuit.ts](./src/examples/circuit.ts)!\n\n`
+    const commands = ["mock", "keygen", "prove", "verify"];
+    let readme = fs.readFileSync("./readmeTemplate.md", 'utf8');
     readme += "## Usage\n\n"
     const helpText = execSync("node ./dist/index.js --help").toString()
     readme += "```\n" + helpText + "```\n\n"
@@ -37,5 +37,11 @@ function genReadme() {
     fs.writeFileSync('./dist/readme.md', readme);
 }
 
+function copyCircuitRunner() {
+    const circuitRunner = fs.readFileSync("./src/examples/run.ts", 'utf8');
+    fs.writeFileSync('./dist/run.ts', circuitRunner);
+}
+
 genReadme();
 copyPackageJson();
+copyCircuitRunner();

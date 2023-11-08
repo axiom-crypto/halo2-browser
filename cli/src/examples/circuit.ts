@@ -13,7 +13,7 @@ export const circuit = async (halo2Lib: Halo2Lib, inputs: {x: number}) => {
     rangeCheck(witness(50), 8)
     rangeCheck(witness(50), 8)
     isLessThan(constant(1), constant(9), "4")
-    // makePublic(g);
+    makePublic(g);
     makePublic(constant(1));
 }
 
