@@ -1,6 +1,9 @@
 name: halo2-wasm Tests
 
-on: push
+on:
+   push: 
+     paths:
+       - "halo2-wasm/**"
 
 defaults:
   run:
