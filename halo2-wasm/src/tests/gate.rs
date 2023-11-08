@@ -1,18 +1,21 @@
+#![allow(clippy::redundant_closure_call)]
+use crate::halo2lib::{Halo2LibWasm, RATE, R_F, R_P, SECURE_MDS, T};
+use crate::tests::utils::base_test;
+use halo2_base::gates::{GateChip, GateInstructions};
+use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use halo2_base::poseidon::hasher::PoseidonHasher;
 use halo2_base::Context;
+use halo2_base::QuantumCell::Existing;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use snark_verifier::util::arithmetic::PrimeField;
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-use halo2_base::gates::{GateInstructions, GateChip};
-use crate::halo2lib::Halo2LibWasm;
-use halo2_base::QuantumCell::Existing;
-use crate::tests::utils::base_test;
+use snark_verifier_sdk::halo2::OptimizedPoseidonSpec;
 
 macro_rules! gate_test {
     ([$a:expr], $op:ident) => {
         paste::item! {
             #[test]
-            pub fn [<test_ $op _ $a>]() {
+            pub fn [<test_ $op>]() {
                 let base = base_test().run_gate(|ctx, chip| {
                     let [a] = [$a].map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()));
                     chip.$op(ctx, a);
@@ -28,7 +31,7 @@ macro_rules! gate_test {
     ([$a:expr, $b:expr], $op:ident) => {
         paste::item! {
             #[test]
-            pub fn [<test_ $op _ $a _ $b>]() {
+            pub fn [<test_ $op>]() {
                 let base = base_test().run_gate(|ctx, chip| {
                     let [a, b] = [$a, $b].map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()));
                     chip.$op(ctx, a, b);
@@ -44,7 +47,7 @@ macro_rules! gate_test {
     ([$a:expr, $b:expr, $c:expr], $op:ident) => {
         paste::item! {
             #[test]
-            pub fn [<test_ $op _ $a _ $b _ $c>]() {
+            pub fn [<test_ $op>]() {
                 let base = base_test().run_gate(|ctx, chip| {
                     let [a, b, c] = [$a, $b, $c].map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()));
                     chip.$op(ctx, a, b, c);
@@ -108,13 +111,37 @@ gate_test!(
     test_inner_product,
     &["15", "10", "5"],
     |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
-        chip.inner_product(ctx, inputs.clone(), inputs.iter().map(|x| Existing(*x)).collect_vec());
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
+        chip.inner_product(
+            ctx,
+            inputs.clone(),
+            inputs.iter().map(|x| Existing(*x)).collect_vec(),
+        );
     },
     |ctx: &mut Halo2LibWasm, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let inputs = inputs.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
         ctx.inner_product(inputs.clone().as_slice(), inputs.as_slice());
+    }
+);
+
+gate_test!(
+    test_pow_var,
+    ("15", "10", 4),
+    |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: (&str, &str, usize)| {
+        let a = ctx.load_witness(Fr::from_str_vartime(inputs.0).unwrap());
+        let exp = ctx.load_witness(Fr::from_str_vartime(inputs.1).unwrap());
+        chip.pow_var(ctx, a, exp, inputs.2);
+    },
+    |ctx: &mut Halo2LibWasm, inputs: (&str, &str, usize)| {
+        let a = ctx.witness(inputs.0);
+        let exp = ctx.witness(inputs.1);
+        ctx.pow_var(a, exp, &inputs.2.to_string());
     }
 );
 
@@ -122,12 +149,17 @@ gate_test!(
     test_sum,
     &["15", "10", "5"],
     |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
         chip.sum(ctx, inputs);
     },
     |ctx: &mut Halo2LibWasm, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let inputs = inputs.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
         ctx.sum(inputs.as_slice());
     }
 );
@@ -136,12 +168,17 @@ gate_test!(
     test_bits_to_indicator,
     &["1", "0", "0", "1", "0"],
     |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
         chip.bits_to_indicator(ctx, &inputs);
     },
     |ctx: &mut Halo2LibWasm, inputs: &[&str]| {
-        let inputs = inputs.iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let inputs = inputs.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
         ctx.bits_to_indicator(inputs.as_slice());
     }
 );
@@ -159,20 +196,29 @@ gate_test!(
     }
 );
 
-
 gate_test!(
     test_select_by_indicator,
     &[&["1", "2", "3", "4"], &["0", "0", "1", "0"]],
     |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: &[&[&str]]| {
-        let a = inputs[0].iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
-        let indicator = inputs[1].iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
+        let a = inputs[0]
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
+        let indicator = inputs[1]
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
         chip.select_by_indicator(ctx, a, indicator);
     },
     |ctx: &mut Halo2LibWasm, inputs: &[&[&str]]| {
-        let a = inputs[0].iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let a = a.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
-        let indicator = inputs[1].iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let indicator = indicator.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
+        let a = inputs[0]
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
+        let indicator = inputs[1]
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
         ctx.select_by_indicator(a.as_slice(), indicator.as_slice());
     }
 );
@@ -181,13 +227,20 @@ gate_test!(
     test_select_from_idx,
     (&["1", "2", "3", "4"], "2"),
     |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: (&[&str; 4], &str)| {
-        let a = inputs.0.iter().map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap())).collect::<Vec<_>>();
+        let a = inputs
+            .0
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
         let idx = ctx.load_witness(Fr::from_str_vartime(inputs.1).unwrap());
         chip.select_from_idx(ctx, a, idx);
     },
     |ctx: &mut Halo2LibWasm, inputs: (&[&str; 4], &str)| {
-        let a = inputs.0.iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
-        let a = a.iter().map(|x| x.to_u32().unwrap()).collect::<Vec<_>>();
+        let a = inputs
+            .0
+            .iter()
+            .map(|x| ctx.witness(x).to_u32().unwrap())
+            .collect::<Vec<_>>();
         let idx = ctx.witness(inputs.1);
         ctx.select_from_idx(a.as_slice(), idx);
     }
@@ -209,35 +262,73 @@ gate_test!(
 
 gate_test!(
     test_constrain_equal,
-    ("15"),
-    |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: (&str)| {
-        let num = ctx.load_witness(Fr::from_str_vartime(inputs).unwrap());
-        ctx.constrain_equal(&num.clone(), &num);
+    ("15",),
+    |ctx: &mut Context<Fr>, _, inputs: (&str,)| {
+        let a = ctx.load_witness(Fr::from_str_vartime(inputs.0).unwrap());
+        let b = ctx.load_witness(Fr::from_str_vartime(inputs.0).unwrap());
+        ctx.constrain_equal(&a, &b);
     },
-    |ctx: &mut Halo2LibWasm, inputs: &str| {
-        let num = ctx.witness(inputs);
-        ctx.constrain_equal(num, num);
+    |ctx: &mut Halo2LibWasm, inputs: (&str,)| {
+        let a = ctx.witness(inputs.0);
+        let b = ctx.witness(inputs.0);
+        ctx.constrain_equal(a, b);
     }
 );
 
 gate_test!(
     test_witness,
-    ("15"),
-    |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: (&str)| {
-        ctx.load_witness(Fr::from_str_vartime(inputs).unwrap());
+    ("15",),
+    |ctx: &mut Context<Fr>, _, inputs: (&str,)| {
+        ctx.load_witness(Fr::from_str_vartime(inputs.0).unwrap());
     },
-    |ctx: &mut Halo2LibWasm, inputs: &str| {
-        ctx.witness(inputs);
+    |ctx: &mut Halo2LibWasm, inputs: (&str,)| {
+        ctx.witness(inputs.0);
     }
 );
 
 gate_test!(
     test_constant,
-    ("15"),
-    |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: (&str)| {
-        ctx.load_constant(Fr::from_str_vartime(inputs).unwrap());
+    ("15",),
+    |ctx: &mut Context<Fr>, _, inputs: (&str,)| {
+        ctx.load_constant(Fr::from_str_vartime(inputs.0).unwrap());
     },
-    |ctx: &mut Halo2LibWasm, inputs: &str| {
-        ctx.constant(inputs);
+    |ctx: &mut Halo2LibWasm, inputs: (&str,)| {
+        ctx.constant(inputs.0);
     }
 );
+
+gate_test!(
+    test_poseidon,
+    &["90", "50", "12", "12"],
+    |ctx: &mut Context<Fr>, chip: &GateChip<Fr>, inputs: &[&str]| {
+        let inputs = inputs
+            .iter()
+            .map(|x| ctx.load_witness(Fr::from_str_vartime(x).unwrap()))
+            .collect::<Vec<_>>();
+        let spec = OptimizedPoseidonSpec::<Fr, T, RATE>::new::<R_F, R_P, SECURE_MDS>();
+        let mut hasher = PoseidonHasher::new(spec);
+        hasher.initialize_consts(ctx, chip);
+        hasher.hash_fix_len_array(ctx, chip, &inputs);
+    },
+    |ctx: &mut Halo2LibWasm, inputs: &[&str]| {
+        let inputs = inputs.iter().map(|x| ctx.witness(x)).collect::<Vec<_>>();
+        let inputs = inputs
+            .iter()
+            .map(|x| x.to_u32().unwrap())
+            .collect::<Vec<_>>();
+        ctx.poseidon(inputs.as_slice());
+    }
+);
+
+#[test]
+pub fn test_make_public() {
+    let base = base_test().run_gate_with_instances(|ctx, _, make_public| {
+        let a = ctx.load_witness(Fr::from_str_vartime("10").unwrap());
+        make_public.push(a);
+    });
+    let wasm = base_test().run_wasm_builder_with_instances(|ctx, halo2_wasm| {
+        let a = ctx.witness("10");
+        ctx.make_public(halo2_wasm, a, 0);
+    });
+    assert_eq!(base, wasm);
+}
