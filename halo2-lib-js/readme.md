@@ -4,7 +4,7 @@ This repository aims to streamline the process of writing circuits in Typescript
 
 ## Getting Started
 
-To build your own `halo2-wasm` module, see this [README](https://github.com/axiom-crypto/halo2-wasm). 
+To build your own `halo2-wasm` module, see this [README](../halo2-wasm). 
 
 Install `halo2-js` in your own JS/TS project with
 ```
@@ -14,7 +14,7 @@ or use your favorite package manager (npm, yarn, etc.).
 
 ## Setting up the `CircuitScaffold`
 
-The `halo2-wasm` package already has an abstract `CircuitScaffold` that must implemented. Here is an example using `Halo2LibWasm` and `Halo2CircuitRunner`:
+The `halo2-wasm` package already has an abstract `CircuitScaffold` that must be implemented. Here is an example using `Halo2LibWasm` and `Halo2CircuitRunner`:
 
 ### Web
 

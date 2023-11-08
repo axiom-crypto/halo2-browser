@@ -1,6 +1,6 @@
 {
-  "name": "axiom-repl-client",
-  "version": "0.1.0",
+  "name": "@axiom-crypto/halo2-repl",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@axiom-crypto/halo2-lib-js": "0.2.1",
-    "@axiom-crypto/halo2-wasm": "0.2.3",
+    "@axiom-crypto/halo2-lib-js": "0.2.9",
+    "@axiom-crypto/halo2-wasm": "0.2.7",
     "@devbookhq/splitter": "^1.4.2",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",

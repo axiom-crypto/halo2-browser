@@ -1,7 +1,7 @@
 #!/bin/bash
 node ./scripts/updateCargoVersion.js
 echo "build.sh start"
-rm -r pkg
+rm -rf pkg
 mkdir pkg
 ./scripts/build-js.sh
 ./scripts/build-web.sh
