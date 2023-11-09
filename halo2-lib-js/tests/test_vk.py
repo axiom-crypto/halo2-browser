@@ -15,7 +15,8 @@ def test_vk(filename):
     file_path = os.path.join(circuit_dir, filename)
     if os.path.isfile(file_path):
         test_name = camel_to_snake(filename.split('.')[0])
-        rust_test = "tests::gate::test_" + test_name
+        test_type = filename.split('.')[-2]
+        rust_test = "tests::" + test_type + "::test_" + test_name
         print("Testing " + test_name)
         subprocess.run(['halo2-wasm', 'keygen', file_path], stdout = subprocess.DEVNULL)
         subprocess.run(['cargo', 'test', rust_test, "--quiet", "--", "--exact"], stdout = subprocess.DEVNULL)

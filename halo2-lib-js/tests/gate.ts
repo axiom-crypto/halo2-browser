@@ -1,27 +1,6 @@
-import path from "path";
 import { Halo2Lib } from "../src/halo2lib";
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { writeCircuitToFile } from "./utils";
 
-const config = {
-    k: 10,
-    numAdvice: 20,
-    numLookupAdvice: 3,
-    numInstance: 1,
-    numLookupBits: 9,
-    numVirtualInstance: 1,
-}
-
-const writeCircuitToFile = (circuit: string, relativePath: string) => {
-    const configStr = `export const config = ${JSON.stringify(config, null, 4)}\n`;
-    const inputStr = `export const inputs = {}\n`;
-    const filePath = path.resolve(__dirname, "./circuits", relativePath);
-    const folderPath = path.dirname(filePath);
-    if (!existsSync(folderPath)) {
-        mkdirSync(folderPath, { recursive: true });
-    }
-    writeFileSync(filePath, configStr + inputStr + circuit);
-    console.log(`Wrote circuit to ${filePath}`);
-}
 
 const buildGateTest = (inputs: number[], func: string) => {
     return `
@@ -38,12 +17,12 @@ const buildGateTestFn = (name: string, fn: (halo2Lib: Halo2Lib, inputs: null) =>
 
 const gateTest = (inputs: number[], func: string) => {
     const circuit = buildGateTest(inputs, func);
-    writeCircuitToFile(circuit, `${func}.ts`);
+    writeCircuitToFile(circuit, `${func}.gate.ts`);
 }
 
 const gateTestFn = (name: string, fn: (halo2Lib: Halo2Lib, inputs: null) => void) => {
     const circuit = buildGateTestFn(name, fn);
-    writeCircuitToFile(circuit, `${name}.ts`);
+    writeCircuitToFile(circuit, `${name}.gate.ts`);
 }
 
 gateTest([15, 10], "add");
