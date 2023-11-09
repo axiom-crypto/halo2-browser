@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@axiom-crypto/halo2-wasm':
-    specifier: ^0.2.3
-    version: 0.2.3
+    specifier: ^0.2.7
+    version: 0.2.7
   commander:
     specifier: ^11.1.0
     version: 11.1.0
@@ -25,8 +25,8 @@ devDependencies:
 
 packages:
 
-  /@axiom-crypto/halo2-wasm@0.2.3:
-    resolution: {integrity: sha512-Yw5Nh825BiSF0tnvC0kZas4sezR8S6Z4ELJQsVKTaGiZin6416URFxBP5bQDj7u517QaFG8RTx50Do6xPIR8eg==}
+  /@axiom-crypto/halo2-wasm@0.2.7:
+    resolution: {integrity: sha512-pmgFCkCJUlFgh5NCLR59WpWIiBegNxBRAAlA2UxPMga1Pba02ynZgf6SW0tbQaezMiWUdTA9SfpeosovcNI6Yg==}
     dev: false
 
   /@babel/code-frame@7.22.13:

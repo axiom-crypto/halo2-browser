@@ -1,7 +1,7 @@
 {
-  "name": "halo2-wasm-cli",
-  "version": "0.1.0",
-  "description": "Halo2 Javascript library",
+  "name": "@axiom-crypto/halo2-wasm-cli",
+  "version": "0.1.1",
+  "description": "halo2-wasm cli tool",
   "main": "index.js",
   "scripts": {
     "build": "rm -rf dist && tsc && node ./scripts/postTsc && chmod +x ./dist/index.js"
@@ -18,7 +18,7 @@
   "author": "Intrinsic Technologies",
   "license": "ISC",
   "dependencies": {
-    "@axiom-crypto/halo2-wasm": "^0.2.3",
+    "@axiom-crypto/halo2-wasm": "^0.2.7",
     "commander": "^11.1.0",
     "typescript": "^5.2.2"
   },
