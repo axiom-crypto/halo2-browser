@@ -495,7 +495,7 @@ function App() {
               <MenuButton
                 text="Docs"
                 onClick={() => {
-                  window.open('https://docs.axiom.xyz/zero-knowledge-proofs/halo2repl', '_blank');
+                  window.open('https://docs.axiom.xyz/zero-knowledge-proofs/halo2-repl', '_blank');
                 }}
               />
             </div>
