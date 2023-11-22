@@ -12,8 +12,21 @@ export async function getFunctionFromTs(relativePath: string, shouldCircuitFunct
         compilerOptions: { module: ts.ModuleKind.CommonJS }
     });
     const script = new vm.Script(result.outputText);
+    const customRequire = (moduleName: string) => {
+        try {
+            const npmRoot = execSync('npm root -g').toString().trim();
+            return require(`${npmRoot}/${moduleName}`);
+        } catch (e) {
+            throw new Error(`Cannot find module '${moduleName}'.\n Try installing it globally with 'npm install -g ${moduleName}'`);
+        }
+    };
     const context = vm.createContext({
         exports: {},
+        require: customRequire,
+        module: module,
+        console: console,
+        __filename: __filename,
+        __dirname: __dirname,
     });
     script.runInContext(context);
     if (shouldCircuitFunctionExist && !context.exports.circuit) throw new Error("File does not export a `circuit` function");
