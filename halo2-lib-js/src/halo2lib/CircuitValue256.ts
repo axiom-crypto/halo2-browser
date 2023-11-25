@@ -1,6 +1,6 @@
 import { Halo2LibWasm } from "@axiom-crypto/halo2-wasm/web";
 import { CircuitValue } from "./CircuitValue";
-import { convertInput } from "../shared/utils";
+import { convertRawInput } from "../shared/utils";
 
 export class CircuitValue256 {
   private _value: bigint;
@@ -32,10 +32,10 @@ export class CircuitValue256 {
       let lo128 = input.slice(32);
 
       const hi128CircuitValue = new CircuitValue({
-        cell: this._halo2Lib.constant(convertInput("0x" + hi128)),
+        cell: this._halo2Lib.constant(convertRawInput("0x" + hi128)),
       });
       const lo128CircuitValue = new CircuitValue({
-        cell: this._halo2Lib.constant(convertInput("0x" + lo128)),
+        cell: this._halo2Lib.constant(convertRawInput("0x" + lo128)),
       });
       this._circuitValue = [hi128CircuitValue, lo128CircuitValue];
     } else if (

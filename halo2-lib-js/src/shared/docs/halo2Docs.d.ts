@@ -11,6 +11,7 @@ import { CircuitValue256 } from "../../halo2lib/CircuitValue256";
 import { CircuitBn254Fq2, CircuitBn254G1Affine, CircuitBn254G2Affine, CircuitSecp256k1Affine } from "../../halo2lib/ecc";
 
 export type RawCircuitInput = string | number | bigint;
+export type ConstantValue = RawCircuitInput;
 
 /**
  * Creates a circuit variable from a number, bigint, or string.
@@ -18,14 +19,14 @@ export type RawCircuitInput = string | number | bigint;
  * @param a The raw circuit input.
  * @returns The witness cell.
  */
-declare const witness: (a: RawCircuitInput) => CircuitValue;
+declare const witness: (a: ConstantValue) => CircuitValue;
 /**
  * Creates a circuit constant from a number, bigint, or string.
  *
  * @param a The raw circuit input.
  * @returns The constant cell.
  */
-declare const constant: (a: RawCircuitInput) => CircuitValue;
+declare const constant: (a: ConstantValue) => CircuitValue;
 /**
  * Adds two circuit values.
  *
@@ -33,7 +34,7 @@ declare const constant: (a: RawCircuitInput) => CircuitValue;
  * @param b The second circuit value.
  * @returns The sum of the two circuit values.
  */
-declare const add: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const add: (a: ConstantValue | CircuitValue, b: CircuitValue) => CircuitValue;
 /**
  * Subtracts the second circuit value from the first circuit value.
  *
@@ -41,14 +42,14 @@ declare const add: (a: CircuitValue, b: CircuitValue) => CircuitValue;
  * @param b The second circuit value.
  * @returns The difference between the two circuit values.
  */
-declare const sub: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const sub: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Negates a circuit value.
  *
  * @param a The circuit value to negate.
  * @returns The negation of the circuit value.
  */
-declare const neg: (a: CircuitValue) => CircuitValue;
+declare const neg: (a: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Multiplies two circuit values.
  *
@@ -56,7 +57,7 @@ declare const neg: (a: CircuitValue) => CircuitValue;
  * @param b The second circuit value.
  * @returns The product of the two circuit values.
  */
-declare const mul: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const mul: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Multiplies two circuit values and adds a third circuit value.
  *
@@ -66,9 +67,9 @@ declare const mul: (a: CircuitValue, b: CircuitValue) => CircuitValue;
  * @returns The result of multiplying the first two circuit values and adding the third circuit value.
  */
 declare const mulAdd: (
-	a: CircuitValue,
-	b: CircuitValue,
-	c: CircuitValue
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
+	c: ConstantValue | CircuitValue
 ) => CircuitValue;
 /**
  * Multiplies a circuit value by the negation of another circuit value.
@@ -77,20 +78,20 @@ declare const mulAdd: (
  * @param b The second circuit value.
  * @returns The result of multiplying the first circuit value by the negation of the second circuit value.
  */
-declare const mulNot: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const mulNot: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Asserts that a circuit value is a bit.
  *
  * @param a The circuit value to assert.
  */
-declare const assertBit: (a: CircuitValue) => void;
+declare const assertBit: (a: ConstantValue | CircuitValue) => void;
 /**
  * Asserts that a circuit value is a constant.
  *
  * @param a The circuit value to assert.
  * @param b The raw circuit input.
  */
-declare const assertIsConst: (a: CircuitValue, b: RawCircuitInput) => void;
+declare const assertIsConst: (a: ConstantValue | CircuitValue, b: ConstantValue) => void;
 /**
  * Computes the inner product of two arrays of circuit values.
  *
@@ -99,8 +100,8 @@ declare const assertIsConst: (a: CircuitValue, b: RawCircuitInput) => void;
  * @returns The inner product of the two arrays.
  */
 declare const innerProduct: (
-	a: CircuitValue[],
-	b: CircuitValue[]
+	a: (ConstantValue | CircuitValue)[],
+	b: (ConstantValue | CircuitValue)[]
 ) => CircuitValue;
 /**
  * Computes the sum of an array of circuit values.
@@ -108,7 +109,7 @@ declare const innerProduct: (
  * @param arr The array of circuit values.
  * @returns The sum of the array of circuit values.
  */
-declare const sum: (arr: CircuitValue[]) => CircuitValue;
+declare const sum: (arr: (ConstantValue | CircuitValue)[]) => CircuitValue;
 /**
  * Performs a bitwise AND operation on two circuit values.
  *
@@ -116,7 +117,7 @@ declare const sum: (arr: CircuitValue[]) => CircuitValue;
  * @param b The second circuit value.
  * @returns The result of the bitwise AND operation.
  */
-declare const and: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const and: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Performs a bitwise OR operation on two circuit values.
  *
@@ -124,21 +125,21 @@ declare const and: (a: CircuitValue, b: CircuitValue) => CircuitValue;
  * @param b The second circuit value.
  * @returns The result of the bitwise OR operation.
  */
-declare const or: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const or: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Performs a bitwise NOT operation on a circuit value.
  *
  * @param a The circuit value.
  * @returns The result of the bitwise NOT operation.
  */
-declare const not: (a: CircuitValue) => CircuitValue;
+declare const not: (a: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Decrements a circuit value by 1.
  *
  * @param a The circuit value.
  * @returns The decremented circuit value.
  */
-declare const dec: (a: CircuitValue) => CircuitValue;
+declare const dec: (a: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Selects a circuit value based on a condition.
  *
@@ -148,9 +149,9 @@ declare const dec: (a: CircuitValue) => CircuitValue;
  * @returns sel ? a : b
  */
 declare const select: (
-	a: CircuitValue,
-	b: CircuitValue,
-	sel: CircuitValue
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
+	sel: ConstantValue | CircuitValue
 ) => CircuitValue;
 /**
  * Performs a bitwise OR-AND operation on three circuit values.
@@ -161,9 +162,9 @@ declare const select: (
  * @returns The result of the OR-AND operation.
  */
 declare const orAnd: (
-	a: CircuitValue,
-	b: CircuitValue,
-	c: CircuitValue
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
+	c: ConstantValue | CircuitValue
 ) => CircuitValue;
 /**
  * Converts an array of circuit values to an indicator array.
@@ -171,7 +172,7 @@ declare const orAnd: (
  * @param bits The array of circuit values.
  * @returns The indicator circuit value.
  */
-declare const bitsToIndicator: (bits: CircuitValue[]) => CircuitValue[];
+declare const bitsToIndicator: (bits: (ConstantValue | CircuitValue)[]) => CircuitValue[];
 /**
  * Converts an index circuit value to an indicator circuit value.
  *
@@ -180,8 +181,8 @@ declare const bitsToIndicator: (bits: CircuitValue[]) => CircuitValue[];
  * @returns The indicator circuit value.
  */
 declare const idxToIndicator: (
-	idx: CircuitValue,
-	len: RawCircuitInput
+	idx: ConstantValue | CircuitValue,
+	len: ConstantValue
 ) => CircuitValue[];
 /**
  * Selects circuit values from an array based on an indicator circuit value.
@@ -191,8 +192,8 @@ declare const idxToIndicator: (
  * @returns The selected circuit values.
  */
 declare const selectByIndicator: (
-	arr: CircuitValue[],
-	indicator: CircuitValue[]
+	arr: ConstantValue | CircuitValue[],
+	indicator: (ConstantValue | CircuitValue)[]
 ) => CircuitValue;
 /**
  * Selects a circuit value from an array based on an index circuit value.
@@ -202,8 +203,8 @@ declare const selectByIndicator: (
  * @returns The selected circuit value.
  */
 declare const selectFromIdx: (
-	arr: CircuitValue[],
-	idx: CircuitValue
+	arr: (ConstantValue | CircuitValue)[],
+	idx: ConstantValue | CircuitValue
 ) => CircuitValue;
 /**
  * Checks if a circuit value is zero.
@@ -211,7 +212,7 @@ declare const selectFromIdx: (
  * @param a The circuit value to check.
  * @returns The indicator circuit value representing whether the input is zero.
  */
-declare const isZero: (a: CircuitValue) => CircuitValue;
+declare const isZero: (a: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Checks if two circuit values are equal.
  *
@@ -219,7 +220,7 @@ declare const isZero: (a: CircuitValue) => CircuitValue;
  * @param b The second circuit value.
  * @returns The indicator circuit value representing whether the two inputs are equal.
  */
-declare const isEqual: (a: CircuitValue, b: CircuitValue) => CircuitValue;
+declare const isEqual: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Converts a circuit value to an array of bits.
  *
@@ -228,8 +229,8 @@ declare const isEqual: (a: CircuitValue, b: CircuitValue) => CircuitValue;
  * @returns The array of bits representing the input circuit value.
  */
 declare const numToBits: (
-	a: CircuitValue,
-	len: RawCircuitInput
+	a: ConstantValue | CircuitValue,
+	len: ConstantValue
 ) => CircuitValue[];
 /**
  * Asserts that two circuit values are equal.
@@ -237,14 +238,14 @@ declare const numToBits: (
  * @param a The first circuit value.
  * @param b The second circuit value.
  */
-declare const checkEqual: (a: CircuitValue, b: CircuitValue) => void;
+declare const checkEqual: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => void;
 /**
  * Checks if a circuit value is within a specified range.
  *
  * @param a The circuit value to check.
  * @param b The range of the circuit value.
  */
-declare const rangeCheck: (a: CircuitValue, b: RawCircuitInput) => void;
+declare const rangeCheck: (a: ConstantValue | CircuitValue, b: ConstantValue) => void;
 /**
  * Checks if the first circuit value is less than the second circuit value.
  *
@@ -253,8 +254,8 @@ declare const rangeCheck: (a: CircuitValue, b: RawCircuitInput) => void;
  * @param c The range of the circuit values.
  */
 declare const checkLessThan: (
-	a: CircuitValue,
-	b: CircuitValue,
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
 	c?: string
 ) => void;
 /**
@@ -266,8 +267,8 @@ declare const checkLessThan: (
  * @returns The indicator circuit value representing whether the first input is less than the second input.
  */
 declare const isLessThan: (
-	a: CircuitValue,
-	b: CircuitValue,
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
 	c?: string
 ) => CircuitValue;
 /**
@@ -279,8 +280,8 @@ declare const isLessThan: (
  *
  */
 declare const div: (
-	a: CircuitValue,
-	b: CircuitValue,
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
 	c?: string,
 	d?: string
 ) => CircuitValue;
@@ -293,8 +294,8 @@ declare const div: (
  *
  */
 declare const mod: (
-	a: CircuitValue,
-	b: CircuitValue,
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
 	c?: string,
 	d?: string
 ) => CircuitValue;
@@ -306,8 +307,8 @@ declare const mod: (
  * @returns The result of the exponentiation.
  */
 declare const pow: (
-	a: CircuitValue,
-	b: CircuitValue,
+	a: ConstantValue | CircuitValue,
+	b: ConstantValue | CircuitValue,
 	c?: string
 ) => CircuitValue;
 /**
@@ -316,7 +317,7 @@ declare const pow: (
  * @param args The circuit values to hash.
  * @returns The hash value.
  */
-declare const poseidon: (...args: CircuitValue[]) => CircuitValue;
+declare const poseidon: (...args: (ConstantValue | CircuitValue)[]) => CircuitValue;
 /**
  * Retrieves the value of a circuit value.
  *
