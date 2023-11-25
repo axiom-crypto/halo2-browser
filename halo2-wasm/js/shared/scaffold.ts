@@ -75,12 +75,12 @@ export abstract class BaseCircuitScaffold {
         return this.halo2wasm.getCircuitStats();
     }
 
-    getVk() {
+    getHalo2Vk() {
         const vk = this.halo2wasm.getVk();
         return new Uint8Array(vk);
     }
 
-    exportVk() {
+    exportHalo2Vk() {
         const vk_arr = this.halo2wasm.getVk();
         const vk = "0x" + Buffer.from(vk_arr).toString('hex');
         const blob = new Blob([vk], { type: "text/plain" });
