@@ -25,6 +25,10 @@ export const autoConfigCircuit = (config: CircuitConfig) => {
     circuit.config(config);
 }
 
+export const setCircuit = (halo2wasm: Halo2Wasm, halo2lib: Halo2LibWasm, silent?: boolean) => {
+    globalThis.circuit = { halo2wasm, halo2lib, silent: silent ?? false };
+}
+
 
 export function Halo2CircuitRunner(halo2wasm: Halo2Wasm, halo2lib: Halo2LibWasm, config: CircuitConfig, silent?: boolean) {
 
