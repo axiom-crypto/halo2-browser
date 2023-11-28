@@ -34,7 +34,7 @@ declare const constant: (a: ConstantValue) => CircuitValue;
  * @param b The second circuit value.
  * @returns The sum of the two circuit values.
  */
-declare const add: (a: ConstantValue | CircuitValue, b: CircuitValue) => CircuitValue;
+declare const add: (a: ConstantValue | CircuitValue, b: ConstantValue | CircuitValue) => CircuitValue;
 /**
  * Subtracts the second circuit value from the first circuit value.
  *
