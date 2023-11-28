@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc && node ./scripts/postTsc.js && pnpm build:docs",
-    "build:docs": "./node_modules/.bin/dts-bundle-generator ./dist/halo2lib/functions.d.ts -o src/shared/build.d.ts && node ./scripts/convertDTs.js && rm -rf ./src/shared/build.d.ts"
+    "build:docs": "./node_modules/.bin/dts-bundle-generator ./dist/halo2lib/functions.d.ts -o src/shared/build.d.ts && node ./scripts/convertDTs.js && rm -rf ./src/shared/build.d.ts",
+    "test:vk": "./tests/test_vk.sh",
+    "test:constant": "./tests/test_constant.sh" 
   },
   "keywords": [
     "axiom",
