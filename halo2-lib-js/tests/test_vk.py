@@ -18,10 +18,12 @@ def test_vk(filename):
         test_type = filename.split('.')[-2]
         rust_test = "tests::" + test_type + "::test_" + test_name
         print("Testing " + test_name)
-        subprocess.run(["npx", 'halo2-wasm', 'keygen', file_path, "-c", "./tests/run.ts"], capture_output=True)
-        subprocess.run(['cargo', 'test', rust_test, "--quiet", "--", "--exact"], capture_output=True)
+        subprocess.run(["npx", 'halo2-wasm', 'keygen', file_path, "-c", "./tests/run.ts"])
+        subprocess.run(['cargo', 'test', rust_test, "--quiet", "--", "--exact"])
         result = subprocess.run(['diff', './data/vk.bin', '../halo2-wasm/vk.bin'], capture_output=True)
         if result.returncode != 0:
+            print(result.stderr)
+            print(result.stdout)
             return (test_name, False)
         return (test_name, True)
 
