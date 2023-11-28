@@ -36,17 +36,23 @@ range_test!(
     }
 );
 
+//performs range check also since that's what halo2-lib-js does as well
+//and `check_less_than` assumes that the inputs are already range checked
 range_test!(
     test_check_less_than,
     ("10", "15", 8),
     |ctx: &mut Context<Fr>, chip: &RangeChip<Fr>, inputs: (&str, &str, usize)| {
         let a = ctx.load_witness(Fr::from_str_vartime(inputs.0).unwrap());
         let b = ctx.load_witness(Fr::from_str_vartime(inputs.1).unwrap());
+        chip.range_check(ctx, a, inputs.2);
+        chip.range_check(ctx, b, inputs.2);
         chip.check_less_than(ctx, a, b, inputs.2);
     },
     |ctx: &mut Halo2LibWasm, inputs: (&str, &str, usize)| {
         let a = ctx.witness(inputs.0);
-        let b = ctx.witness(inputs.0);
+        let b = ctx.witness(inputs.1);
+        ctx.range_check(a, &inputs.2.to_string());
+        ctx.range_check(b, &inputs.2.to_string());
         ctx.check_less_than(a, b, &inputs.2.to_string());
     }
 );
@@ -64,17 +70,23 @@ range_test!(
     }
 );
 
+//performs range check also since that's what halo2-lib-js does as well
+//and `is_less_than` assumes that the inputs are already range checked
 range_test!(
     test_is_less_than,
     &["10", "15", "8"],
     |ctx: &mut Context<Fr>, chip: &RangeChip<Fr>, inputs: &[&str]| {
         let a = ctx.load_witness(Fr::from_str_vartime(inputs[0]).unwrap());
         let b = ctx.load_witness(Fr::from_str_vartime(inputs[1]).unwrap());
+        chip.range_check(ctx, a, inputs[2].parse().unwrap());
+        chip.range_check(ctx, b, inputs[2].parse().unwrap());
         chip.is_less_than(ctx, a, b, inputs[2].parse().unwrap());
     },
     |ctx: &mut Halo2LibWasm, inputs: &[&str]| {
         let a = ctx.witness(inputs[0]);
         let b = ctx.witness(inputs[1]);
+        ctx.range_check(a, inputs[2]);
+        ctx.range_check(b, inputs[2]);
         ctx.is_less_than(a, b, inputs[2]);
     }
 );
