@@ -14,8 +14,13 @@ export async function getFunctionFromTs(relativePath: string, shouldCircuitFunct
     const script = new vm.Script(result.outputText);
     const customRequire = (moduleName: string) => {
         try {
-            const npmRoot = execSync('npm root -g').toString().trim();
-            return require(`${npmRoot}/${moduleName}`);
+            if (moduleName === "@axiom-crypto/halo2-lib-js") {
+                return require("@axiom-crypto/halo2-lib-js");
+            }
+            else {
+                const npmRoot = execSync('npm root -g').toString().trim();
+                return require(`${npmRoot}/${moduleName}`);
+            }
         } catch (e) {
             throw new Error(`Cannot find module '${moduleName}'.\n Try installing it globally with 'npm install -g ${moduleName}'`);
         }
