@@ -33,7 +33,7 @@ jobs:
         working-directory: halo2-lib-js
         run: |
           npm install
-          npm add @axiom-crypto/halo2-wasm-cli
+          npm add @axiom-crypto/halo2-wasm-cli@0.1.3
       - name: Test halo2-lib-js/halo2-wasm VK equivalence
         working-directory: halo2-lib-js
         run: npm run test:vk
