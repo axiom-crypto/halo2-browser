@@ -1,6 +1,6 @@
 {
   "name": "@axiom-crypto/halo2-wasm-cli",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Halo2 Javascript library",
   "main": "index.js",
   "scripts": {
