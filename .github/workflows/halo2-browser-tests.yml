@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest-64core-256ram
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
       - name: Build halo2-wasm
         working-directory: halo2-wasm
         run: |
@@ -32,14 +35,12 @@ jobs:
       - name: Build halo2-lib-js
         working-directory: halo2-lib-js
         run: |
-          pnpm install
-          pnpm add @axiom-crypto/halo2-wasm-cli
+          npm install
+          npm add @axiom-crypto/halo2-wasm-cli
       - name: Test halo2-lib-js/halo2-wasm VK equivalence
         working-directory: halo2-lib-js
-        run: |
-          pnpm run test:vk
+        run: npm run test:vk
       - name: Test halo2-lib-js constant equivalence
         working-directory: halo2-lib-js
-        run: |
-          pnpm run test:constant
+        run: npm run test:constant
       

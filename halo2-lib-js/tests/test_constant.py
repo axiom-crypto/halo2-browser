@@ -11,12 +11,12 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 circuit_dir = os.path.join(script_dir, 'circuits')
 vk_dir = os.path.join(script_dir, 'data')
 
-def replace_text_in_file(file_path, out_path):
+def replace_text_in_file(file_path):
     with open(file_path, 'r') as file:
         file_data = file.read()
 
     file_data = re.sub(r'constant\((.*?)\)', r'\1', file_data)
-    with open(out_path, 'w') as file:
+    with open(file_path, 'w') as file:
         file.write(file_data)
 
 def test_constant(filename):
@@ -25,12 +25,13 @@ def test_constant(filename):
         test_name = camel_to_snake(filename.split('.')[0])
         if "constant" in filename:
             return None
-        const_file_path = os.path.join(circuit_dir, "constant." + filename)
-        replace_text_in_file(file_path, const_file_path)
+        replace_text_in_file(file_path)
+        test_type = filename.split('.')[-2]
+        rust_test = "tests::" + test_type + "::test_" + test_name
         print("Testing " + test_name)
-        subprocess.run(["pnpm", 'halo2-wasm', 'keygen', file_path, "-c", "./tests/run.ts"], capture_output=True)
-        subprocess.run(["pnpm", 'halo2-wasm', 'keygen', const_file_path, "-c", "./tests/run.ts", "-vk", "./data/const_vk.bin"], capture_output=True)
-        result = subprocess.run(['diff', './data/vk.bin', './data/const_vk.bin'], capture_output=True)
+        subprocess.run(["npx", 'halo2-wasm', 'keygen', file_path, "-c", "./tests/run.ts"], capture_output=True)
+        subprocess.run(['cargo', 'test', rust_test, "--quiet", "--", "--exact"], capture_output=True)
+        result = subprocess.run(['diff', './data/vk.bin', '../halo2-wasm/vk.bin'], capture_output=True)
         if result.returncode != 0:
             return (test_name, False)
         return (test_name, True)
