@@ -1,18 +1,19 @@
-import { Halo2Lib } from "../src/halo2lib";
 import { writeCircuitToFile } from "./utils";
+import * as halo2Lib from "../src/halo2lib/functions";
 
 
 const buildGateTest = (inputs: number[], func: string) => {
     return `
-//@ts-ignore
-export const circuit = async (halo2Lib: Halo2Lib, inputs: null) => {
+import * as halo2Lib from "@axiom-crypto/halo2-lib-js";
+export const circuit = async (inputs: null) => {
     const {witness, ${func}} = halo2Lib;
     ${func}(${inputs.map((input) => `witness(${input})`).join(", ")});
 }`;
 }
 
-const buildGateTestFn = (name: string, fn: (halo2Lib: Halo2Lib, inputs: null) => void) => {
-    return `//@ts-ignore\nexport const circuit = async ${fn.toString()}`;
+const buildGateTestFn = (name: string, fn: (inputs: null) => void) => {
+    return `import * as halo2Lib from "@axiom-crypto/halo2-lib-js";
+    //@ts-ignore\nexport const circuit = async ${fn.toString()}`;
 }
 
 const gateTest = (inputs: number[], func: string) => {
@@ -20,7 +21,7 @@ const gateTest = (inputs: number[], func: string) => {
     writeCircuitToFile(circuit, `${func}.gate.ts`);
 }
 
-const gateTestFn = (name: string, fn: (halo2Lib: Halo2Lib, inputs: null) => void) => {
+const gateTestFn = (name: string, fn: (inputs: null) => void) => {
     const circuit = buildGateTestFn(name, fn);
     writeCircuitToFile(circuit, `${name}.gate.ts`);
 }
@@ -41,76 +42,76 @@ gateTest([0], "isZero");
 gateTest([9, 5], "isEqual");
 gateTest([10, 5, 0], "select");
 
-gateTestFn("assertIsConst", (halo2Lib, _) => {
+gateTestFn("assertIsConst", (_) => {
     const { witness, assertIsConst } = halo2Lib;
     assertIsConst(witness(15), 15);
 })
 
-gateTestFn("innerProduct", (halo2Lib, _) => {
+gateTestFn("innerProduct", (_) => {
     const { witness, innerProduct } = halo2Lib;
     const inputs = [15, 10, 5].map(witness);
     innerProduct(inputs, inputs)
 })
 
-gateTestFn("powVar", (halo2Lib, _) => {
+gateTestFn("powVar", (_) => {
     const { witness, pow } = halo2Lib;
     pow(witness(15), witness(10), "4")
 })
 
-gateTestFn("sum", (halo2Lib, _) => {
+gateTestFn("sum", (_) => {
     const { witness, sum } = halo2Lib;
     sum([witness(15), witness(10), witness(5)])
 })
 
-gateTestFn("bitsToIndicator", (halo2Lib, _) => {
+gateTestFn("bitsToIndicator", (_) => {
     const { witness, bitsToIndicator } = halo2Lib;
     bitsToIndicator([1, 0, 0, 1, 0].map(witness))
 })
 
-gateTestFn("idxToIndicator", (halo2Lib, _) => {
+gateTestFn("idxToIndicator", ( _) => {
     const { witness, idxToIndicator } = halo2Lib;
     idxToIndicator(witness(8), 12)
 })
 
-gateTestFn("selectByIndicator", (halo2Lib, _) => {
+gateTestFn("selectByIndicator", (_) => {
     const { witness, selectByIndicator } = halo2Lib;
     const input = ["1", "2", "3", "4"].map(witness);
     const indicator = ["0", "0", "1", "0"].map(witness);
     selectByIndicator(input, indicator)
 })
 
-gateTestFn("selectFromIdx", (halo2Lib, _) => {
+gateTestFn("selectFromIdx", (_) => {
     const { witness, selectFromIdx } = halo2Lib;
     const input = ["1", "2", "3", "4"].map(witness);
     selectFromIdx(input, witness(2))
 })
 
-gateTestFn("numToBits", (halo2Lib, _) => {
+gateTestFn("numToBits", ( _) => {
     const { witness, numToBits } = halo2Lib;
     numToBits(witness(15), 5)
 })
 
-gateTestFn("constrainEqual", (halo2Lib, _) => {
+gateTestFn("constrainEqual", ( _) => {
     const { witness, checkEqual } = halo2Lib;
     checkEqual(witness(15), witness(15))
 })
 
-gateTestFn("constant", (halo2Lib, _) => {
+gateTestFn("constant", (_) => {
     const { constant } = halo2Lib;
     constant(15)
 })
 
-gateTestFn("witness", (halo2Lib, _) => {
+gateTestFn("witness", (_) => {
     const { witness } = halo2Lib;
     witness(15)
 })
 
-gateTestFn("poseidon", (halo2Lib, _) => {
+gateTestFn("poseidon", ( _) => {
     const { witness, poseidon } = halo2Lib;
     poseidon(...["90", "50", "12", "12"].map(witness))
 })
 
-gateTestFn("makePublic", (halo2Lib, _) => {
+gateTestFn("makePublic", (_) => {
     const { witness, makePublic } = halo2Lib;
     makePublic(witness(10))
 })
