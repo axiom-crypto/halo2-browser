@@ -1,11 +1,11 @@
 {
   "name": "@axiom-crypto/halo2-lib-js",
-  "version": "0.2.13-alpha.1",
+  "version": "0.2.13-alpha.2",
   "description": "Halo2 Javascript library",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf ./dist && pnpm build:docs && tsc && node ./scripts/postTsc.js",
-    "build:docs": "./node_modules/.bin/dts-bundle-generator src/shared/docs/halo2Docs.d.ts -o src/shared/docs/build.d.ts --external-inlines=@axiom-crypto/halo2-wasm && node ./scripts/convertDTs.js"
+    "build": "rm -rf ./dist && tsc && node ./scripts/postTsc.js && pnpm build:docs",
+    "build:docs": "./node_modules/.bin/dts-bundle-generator ./dist/halo2lib/functions.d.ts -o src/shared/build.d.ts && node ./scripts/convertDTs.js && rm -rf ./src/shared/build.d.ts"
   },
   "keywords": [
     "axiom",
