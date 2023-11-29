@@ -12,19 +12,19 @@ halo2-wasm mock -c src/examples/run.ts src/examples/circuit.ts
 halo2-wasm mock src/examples/circuit.ts 
 ```
 
-Note: to use the default circuit runner, `halo2-lib-js` must be installed globally using `npm`. 
+Note: to use the default circuit runner, `@axiom-crypto/halo2-lib-js` must be installed globally using `npm`. 
 ```
-npm install -g halo2-lib-js
+npm install -g @axiom-crypto/halo2-lib-js
 ```
 
 ## Installation
 
-To use the `halo2-wasm` command, the `halo2-wasm-cli` package must be installed globally. To do that run:
+To use the `halo2-wasm` command, the `@axiom-crypto/halo2-wasm-cli` package must be installed globally. To do that run:
 ```
-npm install -g halo2-wasm-cli
+npm install -g @axiom-crypto/halo2-wasm-cli
 ```
 
-Note: global npm installations may require sudo access. If you'd like to install `halo2-lib-js` or `halo2-wasm-cli` without sudo access, see this guide: [GitHub](https://github.com/sindresorhus/guides/blob/main/npm-global-without-sudo.md).
+Note: global npm installations may require sudo access. If you'd like to install `@axiom-crypto/halo2-lib-js` or `@axiom-crypto/halo2-wasm-cli` without sudo access, see this guide: [GitHub](https://github.com/sindresorhus/guides/blob/main/npm-global-without-sudo.md).
 
 ## Usage
 
