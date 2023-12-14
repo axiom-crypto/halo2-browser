@@ -1,6 +1,6 @@
 import { Halo2LibWasm } from "@axiom-crypto/halo2-wasm/web";
 import { CircuitValue } from "./CircuitValue";
-import { convertRawInput } from "../shared/utils";
+import { convertInput } from "../shared/utils";
 
 export class CircuitValue256 {
   private _value: bigint;
@@ -8,6 +8,7 @@ export class CircuitValue256 {
   private _halo2Lib: Halo2LibWasm;
 
   constructor(
+    _halo2Lib: Halo2LibWasm,
     {
       value,
       hi,
@@ -18,8 +19,7 @@ export class CircuitValue256 {
       lo?: CircuitValue;
     }
   ) {
-    //@ts-ignore
-    this._halo2Lib = globalThis.circuit.halo2lib;
+    this._halo2Lib = _halo2Lib;
     if (value !== undefined) {
       if (BigInt(value) < 0n) {
         throw new Error("Value cannot be negative.");
@@ -31,11 +31,11 @@ export class CircuitValue256 {
       let hi128 = input.slice(0, 32);
       let lo128 = input.slice(32);
 
-      const hi128CircuitValue = new CircuitValue({
-        cell: this._halo2Lib.constant(convertRawInput("0x" + hi128)),
+      const hi128CircuitValue = new CircuitValue(_halo2Lib, {
+        cell: _halo2Lib.constant(convertInput("0x" + hi128)),
       });
-      const lo128CircuitValue = new CircuitValue({
-        cell: this._halo2Lib.constant(convertRawInput("0x" + lo128)),
+      const lo128CircuitValue = new CircuitValue(_halo2Lib, {
+        cell: _halo2Lib.constant(convertInput("0x" + lo128)),
       });
       this._circuitValue = [hi128CircuitValue, lo128CircuitValue];
     } else if (
@@ -45,8 +45,8 @@ export class CircuitValue256 {
       lo instanceof CircuitValue
     ) {
       this._circuitValue = [hi, lo];
-      const hiVal = BigInt(this._halo2Lib.value(hi.cell()));
-      const loVal = BigInt(this._halo2Lib.value(lo.cell()));
+      const hiVal = BigInt(_halo2Lib.value(hi.cell()));
+      const loVal = BigInt(_halo2Lib.value(lo.cell()));
       const value = hiVal * 2n ** 128n + loVal;
       this._value = value;
     } else {
@@ -88,6 +88,6 @@ export class CircuitValue256 {
         "Cannot convert to CircuitValue (value is > 253 bits). Please use .hi()/.lo() instead."
       );
     }
-    return new CircuitValue({ cell });
+    return new CircuitValue(this._halo2Lib, { cell });
   }
 }

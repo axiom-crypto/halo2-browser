@@ -12,26 +12,8 @@ export async function getFunctionFromTs(relativePath: string, shouldCircuitFunct
         compilerOptions: { module: ts.ModuleKind.CommonJS }
     });
     const script = new vm.Script(result.outputText);
-    const customRequire = (moduleName: string) => {
-        try {
-            if (moduleName === "@axiom-crypto/halo2-lib-js") {
-                return require("@axiom-crypto/halo2-lib-js");
-            }
-            else {
-                const npmRoot = execSync('npm root').toString().trim();
-                return require(`${npmRoot}/${moduleName}`);
-            }
-        } catch (e) {
-            throw new Error(`Cannot find module '${moduleName}'.\n Try installing it globally with 'npm install -g ${moduleName}'`);
-        }
-    };
     const context = vm.createContext({
         exports: {},
-        require: customRequire,
-        module: module,
-        console: console,
-        __filename: __filename,
-        __dirname: __dirname,
     });
     script.runInContext(context);
     if (shouldCircuitFunctionExist && !context.exports.circuit) throw new Error("File does not export a `circuit` function");
@@ -68,13 +50,8 @@ export async function getRunCircuitFromTs(relativePath: string | undefined) {
     const script = new vm.Script(result.outputText);
     const customRequire = (moduleName: string) => {
         try {
-            if (moduleName === "@axiom-crypto/halo2-lib-js") {
-                return require("@axiom-crypto/halo2-lib-js");
-            }
-            else {
-                const npmRoot = execSync('npm root').toString().trim();
-                return require(`${npmRoot}/${moduleName}`);
-            }
+            const npmRoot = execSync('npm root -g').toString().trim();
+            return require(`${npmRoot}/${moduleName}`);
         } catch (e) {
             throw new Error(`Cannot find module '${moduleName}'.\n Try installing it globally with 'npm install -g ${moduleName}'`);
         }
