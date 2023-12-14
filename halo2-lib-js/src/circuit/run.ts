@@ -57,6 +57,7 @@ export function Halo2CircuitRunner(halo2wasm: Halo2Wasm, halo2lib: Halo2LibWasm,
         {
             const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
             await fn(parsedInputs);
+            circuit.assignInstances();
         }
         return {
             config
