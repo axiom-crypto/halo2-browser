@@ -1,11 +1,8 @@
 use anyhow::bail;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use ethers_core::types::H256;
+use halo2_base::gates::circuit::BaseCircuitParams;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::{
-    convert::IntoWasmAbi,
-    describe::WasmDescribe,
-};
 
 /// All configuration parameters of an Axiom Client Circuit that are
 /// hard-coded into the Verify Compute Circuit (which is an Aggregation Circuit with Universality::Full).
@@ -105,19 +102,21 @@ impl AxiomV2CircuitMetadata {
         encoded.resize(32, 0);
         Ok(H256::from_slice(&encoded))
     }
-}
 
-impl IntoWasmAbi for AxiomV2CircuitMetadata {
-    type Abi = [u8; 32];
-
-    fn into_abi(self) -> Self::Abi {
-        self.encode().unwrap().into()
-    }
-}
-
-impl WasmDescribe for AxiomV2CircuitMetadata {
-    fn describe() {
-        
+    pub fn from_circuit_params(
+        circuit_params: &BaseCircuitParams
+    ) -> Self {
+        Self {
+            version: 0,
+            num_instance: vec![circuit_params.num_instance_columns as u32],
+            num_challenge: vec![0],
+            is_aggregation: false,
+            num_advice_per_phase: circuit_params.num_advice_per_phase.clone().iter().map(|x| *x as u16).collect(),
+            num_lookup_advice_per_phase: circuit_params.num_lookup_advice_per_phase.clone().iter().map(|x| *x as u8).collect(),
+            num_fixed: circuit_params.num_fixed.clone() as u8,
+            max_outputs: 1,
+            ..Default::default()
+        }
     }
 }
 

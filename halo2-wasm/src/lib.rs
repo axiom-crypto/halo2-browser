@@ -81,6 +81,8 @@ pub struct CircuitConfig {
     num_instance: usize,
     num_lookup_bits: usize,
     num_virtual_instance: usize,
+    max_user_subqueries: usize,
+    max_user_outputs: usize,
 }
 
 #[wasm_bindgen]
@@ -106,6 +108,22 @@ impl Default for Halo2Wasm {
             params: None,
             pk: None,
             vk: None,
+        }
+    }
+}
+
+impl Halo2Wasm {
+    pub fn get_circuit_metadata(&self, circuit_params: &BaseCircuitParams) -> AxiomV2CircuitMetadata {
+        AxiomV2CircuitMetadata {
+            version: 0,
+            num_instance: vec![circuit_params.num_instance_columns as u32],
+            num_challenge: vec![0],
+            is_aggregation: false,
+            num_advice_per_phase: circuit_params.num_advice_per_phase.clone().iter().map(|x| *x as u16).collect(),
+            num_lookup_advice_per_phase: circuit_params.num_lookup_advice_per_phase.clone().iter().map(|x| *x as u8).collect(),
+            num_fixed: circuit_params.num_fixed.clone() as u8,
+            max_outputs: 1,
+            ..Default::default()
         }
     }
 }
@@ -231,24 +249,10 @@ impl Halo2Wasm {
         }
     }
 
-    pub fn get_circuit_metadata(&mut self, circuit_params: &BaseCircuitParams) -> AxiomV2CircuitMetadata {
-        AxiomV2CircuitMetadata {
-            version: 0,
-            num_instance: vec![circuit_params.num_instance_columns as u32],
-            num_challenge: vec![0],
-            is_aggregation: false,
-            num_advice_per_phase: circuit_params.num_advice_per_phase.clone().iter().map(|x| *x as u16).collect(),
-            num_lookup_advice_per_phase: circuit_params.num_lookup_advice_per_phase.clone().iter().map(|x| *x as u8).collect(),
-            num_fixed: circuit_params.num_fixed.clone() as u8,
-            max_outputs: 1,
-            ..Default::default()
-        }
-    }
-
     #[wasm_bindgen(js_name = getEncodedCircuitMetadata)]
     pub fn get_encoded_circuit_metadata(&mut self) -> Vec<u8> {
-        let circuit_metadata = self.get_circuit_metadata(self.circuit_params.unwrap().as_ref());
-        circuit_metadata.encode().unwrap().to_vec()
+        let circuit_metadata = AxiomV2CircuitMetadata::from_circuit_params(&self.circuit_params.clone().unwrap()); //self.get_circuit_metadata(&self.circuit_params.clone().unwrap());
+        circuit_metadata.encode().unwrap().0.to_vec()
     }
 
     #[wasm_bindgen(js_name = getVk)]
@@ -264,7 +268,7 @@ impl Halo2Wasm {
     #[wasm_bindgen(js_name = getOnchainVk)]
     pub fn get_onchain_vk(&self) -> Vec<u8> {
         let vk = self.vk.as_ref().unwrap();
-        let circuit_metadata = self.get_circuit_metadata(self.circuit_params.unwrap().as_ref());
+        let circuit_metadata = self.get_circuit_metadata(&self.circuit_params.clone().unwrap());
         let preprocessed = vk
             .fixed_commitments()
             .iter()
