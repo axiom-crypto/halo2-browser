@@ -1,6 +1,7 @@
 import prettier from 'prettier/standalone';
 import parserTypescript from 'prettier/parser-typescript';
 import { Halo2CircuitRunner, captureConsoleOutput } from '@axiom-crypto/halo2-lib-js';
+import { Halo2Lib } from '@axiom-crypto/halo2-lib-js';
 import { Halo2LibWasm, getHalo2LibWasm, CircuitScaffold, getKzgParams, DEFAULT_CIRCUIT_CONFIG } from '@axiom-crypto/halo2-wasm/web'
 
 
@@ -38,17 +39,23 @@ export class Halo2Repl extends CircuitScaffold {
         this.stopConsoleCapture = captureConsoleOutput(cb, log, time, timeEnd);
     }
 
+    getVk() {
+        const vk = this.halo2wasm.getVk();
+        return new Uint8Array(vk);
+    }
+
     async exportCircuitCode() {
         if (!this.code) {
             console.log("Need to run populate circuit first");
             return;
         }
-        let halo2Lib = await import("@axiom-crypto/halo2-lib-js");
+        let halo2Lib = new Halo2Lib(this.halo2wasm, this.halo2Lib);
         let halo2libFns = Object.keys(halo2Lib).filter(fn => this.code.includes(fn)).join(", ");
-        let imports = `import { ${halo2libFns} } from "@axiom-crypto/halo2-lib-js";\n`
+        let imports = `import { Halo2Lib } from "@axiom-crypto/halo2-js";\n`
         let circuitInputImport = `import { CircuitInputs } from "./constants";\n\n`
         let codeInputs = Object.keys(JSON.parse(this.inputs)).join(", ");
-        let code = `export const circuit = async ({ ${codeInputs} }: CircuitInputs) => {
+        let code = `export const circuit = async (halo2Lib: Halo2Lib, halo2Data: Halo2Data, { ${codeInputs} }: CircuitInputs) => {
+            const { ${halo2libFns} } = halo2Lib;
             ${this.code}
         }\n`
 
@@ -92,6 +99,13 @@ export class Halo2Repl extends CircuitScaffold {
 
 
         const blob = new Blob([formattedCode], { type: "text/plain" });
+        return blob;
+    }
+
+    exportVk() {
+        const vk_arr = this.halo2wasm.getVk();
+        const vk = "0x" + Buffer.from(vk_arr).toString('hex');
+        const blob = new Blob([vk], { type: "text/plain" });
         return blob;
     }
 

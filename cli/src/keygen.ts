@@ -9,9 +9,9 @@ export const keygen = async (path: string, options: { pk: string, vk: string, ci
     try {
         await scaffold.populateCircuit(circuit.circuit, circuit.inputs);
         await scaffold.keygen();
-        const vk = scaffold.exportVkBuffer();
+        const vk = scaffold.exportVk();
         saveBufferToFile(vk, options.vk, "VK")
-        const pk = scaffold.exportPkBuffer();
+        const pk = scaffold.exportPk();
         saveBufferToFile(pk, options.pk, "PK")
     }
     catch (e) {

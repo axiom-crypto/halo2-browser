@@ -12,11 +12,11 @@ export const joinArrays = (...args: any[]) => {
   return result;
 }
 
-export const convertRawInput = (input: any): any => {
+export const convertInput = (input: any): any => {
   if (typeof input === "string") {
     return BigInt(input).toString();
   } else if (Array.isArray(input)) {
-    return input.map(convertRawInput);
+    return input.map(convertInput);
   } else if (typeof input === "number") {
     return input.toString();
   } else if (typeof input === 'bigint') {

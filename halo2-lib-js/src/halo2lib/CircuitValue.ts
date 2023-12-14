@@ -7,16 +7,16 @@ export class CircuitValue {
   private _circuit: Halo2LibWasm;
 
   constructor(
+    circuit: Halo2LibWasm,
     { value, cell }: { value?: bigint | number | string; cell?: number }
   ) {
-    //@ts-ignore
-    this._circuit = globalThis.circuit.halo2lib;
+    this._circuit = circuit;
     if (value !== undefined) {
       this._value = BigInt(value);
       this._cell = this._circuit.constant(value.toString());
     } else if (cell !== undefined) {
       this._cell = cell;
-      const val = BigInt(this._circuit.value(cell));
+      const val = BigInt(circuit.value(cell));
       this._value = val;
     } else {
       throw new Error("Invalid input");
@@ -48,9 +48,9 @@ export class CircuitValue {
       b.toString(),
       paddedNumBits.toString()
     );
-    const hi128CircuitValue = new CircuitValue({ cell: hi });
-    const lo128CircuitValue = new CircuitValue({ cell: lo });
-    const halo2LibValue256 = new CircuitValue256({
+    const hi128CircuitValue = new CircuitValue(this._circuit, { cell: hi });
+    const lo128CircuitValue = new CircuitValue(this._circuit, { cell: lo });
+    const halo2LibValue256 = new CircuitValue256(this._circuit, {
       hi: hi128CircuitValue,
       lo: lo128CircuitValue,
     });
