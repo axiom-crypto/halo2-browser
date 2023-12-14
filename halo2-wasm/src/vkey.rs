@@ -2,11 +2,13 @@ use halo2_base::halo2_proofs::halo2curves::{ff::PrimeField, serde::SerdeObject, 
 use halo2_base::utils::ScalarField;
 use std::io::{self};
 use std::io::{Result, Write};
+use crate::metadata::AxiomV2CircuitMetadata;
 
 pub trait Field = ScalarField<Repr = [u8; 32]>;
 
 #[derive(Clone, Debug)]
-pub struct PartialVerifyingKey<C: CurveAffine> {
+pub struct OnchainVerifyingKey<C: CurveAffine> {
+    pub circuit_metadata: AxiomV2CircuitMetadata,
     pub preprocessed: Vec<C>,
     pub transcript_initial_state: C::Scalar,
 }
@@ -23,7 +25,7 @@ fn write_curve_compressed<C: CurveAffine>(writer: &mut impl Write, point: C) -> 
     Ok(())
 }
 
-pub fn write_partial_vkey<C>(vkey: &PartialVerifyingKey<C>) -> io::Result<Vec<u8>>
+pub fn write_onchain_vkey<C>(vkey: &OnchainVerifyingKey<C>) -> io::Result<Vec<u8>>
 where
     C: CurveAffine + SerdeObject,
     C::Scalar: Field + SerdeObject,
