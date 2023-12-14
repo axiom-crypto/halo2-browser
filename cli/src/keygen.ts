@@ -1,0 +1,20 @@
+import { CircuitScaffold } from "./scaffold";
+import { getFunctionFromTs, getRunCircuitFromTs, saveBufferToFile } from "./utils";
+
+export const keygen = async (path: string, options: { pk: string, vk: string, circuit: string }) => {
+    const circuit = await getFunctionFromTs(path);
+    let scaffold = new CircuitScaffold(true);
+    scaffold.runCircuit = await getRunCircuitFromTs(options.circuit);
+    scaffold.newCircuitFromConfig(circuit.config);
+    try {
+        await scaffold.populateCircuit(circuit.circuit, circuit.inputs);
+        await scaffold.keygen();
+        const vk = scaffold.exportVkBuffer();
+        saveBufferToFile(vk, options.vk, "VK")
+        const pk = scaffold.exportPkBuffer();
+        saveBufferToFile(pk, options.pk, "PK")
+    }
+    catch (e) {
+        console.error(e);
+    }
+}

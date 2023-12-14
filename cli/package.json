@@ -1,0 +1,30 @@
+{
+  "name": "@axiom-crypto/halo2-wasm-cli",
+  "version": "0.1.5",
+  "description": "Halo2 Javascript library",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc && node ./scripts/postTsc && chmod +x ./dist/index.js"
+  },
+  "keywords": [
+    "axiom",
+    "ethereum",
+    "zero knowledge",
+    "zk",
+    "coprocessor",
+    "crypto",
+    "halo2"
+  ],
+  "author": "Intrinsic Technologies",
+  "license": "ISC",
+  "dependencies": {
+    "@axiom-crypto/halo2-lib-js": "0.2.13-alpha.1",
+    "@axiom-crypto/halo2-wasm": "0.2.10",
+    "commander": "^11.1.0",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.6",
+    "@types/node": "^20.8.9"
+  }
+}

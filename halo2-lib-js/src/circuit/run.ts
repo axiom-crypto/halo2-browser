@@ -1,6 +1,6 @@
 import { Halo2LibWasm, Halo2Wasm } from "@axiom-crypto/halo2-wasm/web";
 import { getInputFunctionSignature } from "../shared/utils";
-import { Halo2Lib } from "../halo2lib"
+// import { Halo2Lib } from "../halo2lib"
 import { CircuitConfig } from "./types";
 
 const parseInputs = (inputs: string) => {
@@ -10,7 +10,8 @@ const parseInputs = (inputs: string) => {
 
 const BLINDING_FACTOR = 20;
 
-export const autoConfigCircuit = (circuit: Halo2Wasm, config: CircuitConfig) => {
+export const autoConfigCircuit = (config: CircuitConfig) => {
+    let circuit = globalThis.circuit.halo2wasm;
     const stats = circuit.getCircuitStats();
 
     for (let i = 6; i < 20; i++) {
@@ -24,10 +25,17 @@ export const autoConfigCircuit = (circuit: Halo2Wasm, config: CircuitConfig) => 
     circuit.config(config);
 }
 
+export const setCircuit = (halo2wasm: Halo2Wasm, halo2lib: Halo2LibWasm, silent?: boolean) => {
+    globalThis.circuit = { halo2wasm, halo2lib, silent: silent ?? false };
+}
 
-export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWasm, config: CircuitConfig) {
+
+export function Halo2CircuitRunner(halo2wasm: Halo2Wasm, halo2lib: Halo2LibWasm, config: CircuitConfig, silent?: boolean) {
 
     config = { ...config };
+    globalThis.circuit = { halo2wasm, halo2lib, silent: silent ?? false };
+    let circuit = globalThis.circuit.halo2wasm;
+    let halo2LibWasm = globalThis.circuit.halo2lib;
 
     const clear = () => {
         circuit.clear();
@@ -36,7 +44,7 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
 
     async function runFromString(code: string, inputs: string) {
         clear();
-        const halo2Lib = new Halo2Lib(circuit, halo2LibWasm, { firstPass: true });
+        const halo2Lib = await import("../halo2lib/functions");
         const halo2LibFns = Object.keys(halo2Lib).filter(key => !(typeof key === 'string' && key.charAt(0) === '_'));
         const functionInputs = getInputFunctionSignature(inputs);
         const parsedInputs = parseInputs(inputs);
@@ -44,11 +52,9 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
         await fn(parsedInputs);
         circuit.assignInstances();
 
-        autoConfigCircuit(circuit, config);
+        autoConfigCircuit(config);
         clear();
         {
-            const halo2Lib = new Halo2Lib(circuit, halo2LibWasm);
-            const halo2LibFns = Object.keys(halo2Lib).filter(key => !(typeof key === 'string' && key.charAt(0) === '_'));
             const fn = eval(`let {${halo2LibFns.join(", ")}} = halo2Lib; (async function({${functionInputs}}) { ${code} })`);
             await fn(parsedInputs);
             circuit.assignInstances();
@@ -58,12 +64,11 @@ export function Halo2CircuitRunner(circuit: Halo2Wasm, halo2LibWasm: Halo2LibWas
         }
     }
 
-    async function run<T extends { [key: string]: number | string | bigint }>(f: (halo2Lib: Halo2Lib, inputs: T) => Promise<void>, inputs: T) {
+    async function run<T extends { [key: string]: number | string | bigint }>(f: (inputs: T) => Promise<void>, inputs: T) {
         clear();
-        let halo2Lib = new Halo2Lib(circuit, halo2LibWasm);
         let stringifiedInputs = JSON.stringify(inputs);
         let parsedInputs = parseInputs(stringifiedInputs);
-        await f(halo2Lib, parsedInputs);
+        await f(parsedInputs);
         circuit.assignInstances();
     }
 
