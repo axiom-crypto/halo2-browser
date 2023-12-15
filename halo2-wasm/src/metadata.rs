@@ -3,14 +3,18 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use ethers_core::types::H256;
 use halo2_base::gates::circuit::BaseCircuitParams;
 use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+
+use crate::CircuitLimits;
 
 /// All configuration parameters of an Axiom Client Circuit that are
 /// hard-coded into the Verify Compute Circuit (which is an Aggregation Circuit with Universality::Full).
 ///
 /// This metadata is only for a circuit built using `RlcCircuitBuilder`
 /// or `BaseCircuitBuilder`, where the circuit _may_ be an aggregation circuit.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Hash)]
+#[derive(Tsify, Clone, Debug, Default, Serialize, Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct AxiomV2CircuitMetadata {
     /// Version byte for domain separation on version of Axiom client, halo2-lib, snark-verifier (for example if we switch to mv_lookup)
     /// If `version = x`, this should be thought of as Axiom Query v2.x
@@ -104,7 +108,8 @@ impl AxiomV2CircuitMetadata {
     }
 
     pub fn from_circuit_params(
-        circuit_params: &BaseCircuitParams
+        circuit_params: &BaseCircuitParams,
+        circuit_limits: &CircuitLimits
     ) -> Self {
         Self {
             version: 0,
@@ -114,7 +119,7 @@ impl AxiomV2CircuitMetadata {
             num_advice_per_phase: circuit_params.num_advice_per_phase.clone().iter().map(|x| *x as u16).collect(),
             num_lookup_advice_per_phase: circuit_params.num_lookup_advice_per_phase.clone().iter().map(|x| *x as u8).collect(),
             num_fixed: circuit_params.num_fixed.clone() as u8,
-            max_outputs: 1,
+            max_outputs: circuit_limits.user_max_outputs as u16,
             ..Default::default()
         }
     }

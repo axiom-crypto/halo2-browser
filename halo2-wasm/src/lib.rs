@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::io::BufReader;
 use std::rc::Rc;
 
+use ethers_core::types::H256;
 use halo2_base::{
     gates::circuit::{builder::BaseCircuitBuilder, BaseCircuitParams},
     AssignedValue,
@@ -48,6 +49,8 @@ pub mod tests;
 use vkey::{write_onchain_vkey, OnchainVerifyingKey};
 use metadata::AxiomV2CircuitMetadata;
 
+use crate::metadata::decode_axiom_v2_circuit_metadata;
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -83,20 +86,22 @@ pub struct CircuitConfig {
     num_virtual_instance: usize,
 }
 
-#[derive(Tsify, Serialize, Deserialize)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct CircuitLimits {
-    max_user_subqueries: usize,
-    max_user_outputs: usize,
+    user_max_outputs: usize,
+    user_max_subqueries: usize,
 }
 
-#[derive(Tsify, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct CircuitComposition {
-    circuit_config: CircuitConfig,
-    circuit_limits: CircuitLimits,
+impl Default for CircuitLimits {
+    fn default() -> Self {
+        CircuitLimits {
+            // Note: ideally should grab from axiom-tools
+            user_max_outputs: 128,
+            user_max_subqueries: 128,
+        }
+    }
 }
 
 #[wasm_bindgen]
@@ -107,6 +112,8 @@ pub struct Halo2Wasm {
     pub public: Vec<Vec<AssignedValue<Fr>>>,
     #[wasm_bindgen(skip)]
     pub circuit_params: Option<BaseCircuitParams>,
+    #[wasm_bindgen(skip)]
+    pub circuit_limits: Option<CircuitLimits>,
     params: Option<ParamsKZG<Bn256>>,
     pk: Option<ProvingKey<G1Affine>>,
     vk: Option<VerifyingKey<G1Affine>>,
@@ -119,6 +126,7 @@ impl Default for Halo2Wasm {
             circuit: Rc::new(RefCell::new(circuit)),
             public: vec![],
             circuit_params: None,
+            circuit_limits: Some(CircuitLimits::default()),
             params: None,
             pk: None,
             vk: None,
@@ -249,8 +257,17 @@ impl Halo2Wasm {
 
     #[wasm_bindgen(js_name = getEncodedCircuitMetadata)]
     pub fn get_encoded_circuit_metadata(&mut self) -> Vec<u8> {
-        let circuit_metadata = AxiomV2CircuitMetadata::from_circuit_params(&self.circuit_params.clone().unwrap());
+        let circuit_metadata = AxiomV2CircuitMetadata::from_circuit_params(
+            &self.circuit_params.clone().unwrap(),
+            &self.circuit_limits.clone().unwrap()
+        );
         circuit_metadata.encode().unwrap().0.to_vec()
+    }
+
+    #[wasm_bindgen(js_name = decodeCircuitMetadata)]
+    pub fn decode_circuit_metadata(bytes: &[u8]) -> AxiomV2CircuitMetadata {
+        let encoded = H256::from_slice(bytes);
+        decode_axiom_v2_circuit_metadata(encoded).unwrap()
     }
 
     #[wasm_bindgen(js_name = getVk)]
@@ -266,7 +283,10 @@ impl Halo2Wasm {
     #[wasm_bindgen(js_name = getOnchainVk)]
     pub fn get_onchain_vk(&self) -> Vec<u8> {
         let vk = self.vk.as_ref().unwrap();
-        let circuit_metadata = AxiomV2CircuitMetadata::from_circuit_params(&self.circuit_params.clone().unwrap());
+        let circuit_metadata = AxiomV2CircuitMetadata::from_circuit_params(
+            &self.circuit_params.clone().unwrap(),
+            &self.circuit_limits.clone().unwrap()
+        );
         let preprocessed = vk
             .fixed_commitments()
             .iter()
