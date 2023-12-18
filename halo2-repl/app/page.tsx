@@ -6,8 +6,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import { type editor } from 'monaco-editor';
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Halo2Repl } from "./worker/halo2repl";
-import { halo2Docs } from "@axiom-crypto/halo2-lib-js/shared/docs/halo2Docs";
-import { makePublicDocs } from "@axiom-crypto/halo2-lib-js/shared/docs/makePublicDocs";
+import { halo2Docs } from "@axiom-crypto/halo2-lib-js/shared/docs";
 import { DEFAULT_CIRCUIT_CONFIG } from "@axiom-crypto/halo2-lib-js/circuit/types";
 import { DEFAULT_CODE, DEFAULT_INPUT } from "@/utils/constants";
 import { fetchGist, fetchGithubAccessToken } from "@/utils/github";
@@ -200,7 +199,7 @@ function App() {
       appendLogs("Starting key generation. This may take up to a minute.")
       await workerApi.current?.keygen();
       await workerApi.current?.stopConsoleCapture();
-      const vk = await workerApi.current?.getVk();
+      const vk = await workerApi.current?.getHalo2Vk();
       if (vk) setCircuitVk(vk);
     });
   };
@@ -221,7 +220,7 @@ function App() {
   }
 
   const downloadVk = async () => {
-    let vkExport = await workerApi.current?.exportVk();
+    let vkExport = await workerApi.current?.exportHalo2Vk();
     if (!vkExport) return;
     let a = document.createElement("a");
     a.href = window.URL.createObjectURL(vkExport);
@@ -279,7 +278,7 @@ function App() {
       target: monaco.languages.typescript.ScriptTarget.ES2020,
       lib: ["es2020"]
     });
-    const docs = [{ docs: halo2Docs, name: "halo2lib.d.ts" }, { docs: makePublicDocs, name: "makePublic.d.ts" }];
+    const docs = [{ docs: halo2Docs, name: "halo2lib.d.ts" }];
     if (defaultInputs) {
       docs.push({ docs: parseCircuitTypes(defaultInputs), name: "inputs.d.ts" })
     }
