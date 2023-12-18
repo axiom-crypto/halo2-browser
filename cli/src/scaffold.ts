@@ -27,12 +27,12 @@ export class CircuitScaffold extends ICircuitScaffold {
         this.halo2wasm.assignInstances();
     }
 
-    exportVk() {
+    exportVkBuffer() {
         const vk = this.halo2wasm.getVk();
         return Buffer.from(vk);
     }
 
-    exportPk() {
+    exportPkBuffer() {
         const pk = this.halo2wasm.getPk();
         return Buffer.from(pk);
     }
@@ -42,7 +42,7 @@ export class CircuitScaffold extends ICircuitScaffold {
         this.halo2wasm.loadPk(pk);
     }
 
-    exportProof() {
+    exportProofBuffer() {
         const proof = this.halo2wasm.prove();
         return Buffer.from(proof);
     }

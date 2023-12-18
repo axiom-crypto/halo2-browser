@@ -41,4 +41,4 @@ public/kzg_bn256_19.bin
 public/kzg_bn256_20.bin
 
 my.d.ts
-src/shared/docs/build.d.ts
+src/shared/build.d.ts
