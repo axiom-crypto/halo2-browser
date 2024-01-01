@@ -1,7 +1,7 @@
 {
   "name": "@axiom-crypto/halo2-wasm",
   "description": "Halo2 wasm bindings",
-  "version": "0.2.10",
+  "version": "0.2.11-rc.1",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
