@@ -1,6 +1,6 @@
 [package]
 name = "halo2-wasm"
-version = "0.2.11-rc.1"
+version = "0.2.12-alpha.0"
 edition = "2021"
 
 [lib]

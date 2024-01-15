@@ -1,5 +1,5 @@
 import { CircuitConfig, Halo2Wasm } from "../../pkg/web/halo2_wasm";
-import { getKzgParams } from "../kzg";
+import { getKzgParams } from "../web/kzg";
 
 export abstract class BaseCircuitScaffold {
     protected halo2wasm!: Halo2Wasm;

@@ -2,7 +2,7 @@ import init, {
   initThreadPool, initPanicHook, Halo2Wasm, Halo2LibWasm, CircuitConfig,
   Bn254FqPoint, Bn254G1AffinePoint, Bn254G2AffinePoint, JsCircuitBn254Fq2, JsCircuitBn254G1Affine, JsCircuitBn254G2Affine, JsCircuitSecp256k1Affine, JsCircuitValue256, Secp256k1AffinePoint
 } from "../../pkg/web/halo2_wasm";
-import { getKzgParams } from "../kzg";
+import { getKzgParams } from "./kzg";
 import { DEFAULT_CIRCUIT_CONFIG } from "../shared";
 import { BaseCircuitScaffold } from "../shared/scaffold";
 
