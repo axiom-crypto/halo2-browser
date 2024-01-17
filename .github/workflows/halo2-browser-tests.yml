@@ -30,17 +30,11 @@ jobs:
       - name: Set all packages to local and build
         working-directory: ./
         run: ./scripts/toggleLocal.sh ci
-      # - name: Build halo2-wasm
-      #   working-directory: halo2-wasm
-      #   run: |
-      #     rustup toolchain install nightly-2023-08-12-x86_64-unknown-linux-gnu
-      #     rustup component add rust-src --toolchain nightly-2023-08-12-x86_64-unknown-linux-gnu
-      #     cargo build --target=x86_64-unknown-linux-gnu --verbose
-      # - name: Build halo2-lib-js
-      #   working-directory: halo2-lib-js
-      #   run: |
-      #     npm install
-      #     npm add @axiom-crypto/halo2-wasm-cli@0.1.6-rc.0
+      - name: Build halo2-lib-js
+        working-directory: halo2-lib-js
+        run: |
+          npm install
+          npm add @axiom-crypto/halo2-wasm-cli@0.1.6-rc.0
       - name: Test halo2-lib-js/halo2-wasm VK equivalence
         working-directory: halo2-lib-js
         run: npm run test:vk
