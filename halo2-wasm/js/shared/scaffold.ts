@@ -1,5 +1,5 @@
 import { CircuitConfig, Halo2Wasm } from "../../pkg/web/halo2_wasm";
-import { getKzgParams } from "../web/kzg";
+import { CircuitScaffoldContext } from "./types";
 
 export abstract class BaseCircuitScaffold {
     protected halo2wasm!: Halo2Wasm;
@@ -7,6 +7,7 @@ export abstract class BaseCircuitScaffold {
     protected shouldTime: boolean;
     protected proof: Uint8Array | null = null;
     protected loadedVk: boolean;
+    protected context: CircuitScaffoldContext;
 
     protected timeStart(name: string) {
         if (this.shouldTime) console.time(name);
@@ -16,13 +17,17 @@ export abstract class BaseCircuitScaffold {
         if (this.shouldTime) console.timeEnd(name);
     }
 
+    protected setContext(context: CircuitScaffoldContext) {
+        this.context = context;
+    }
+
     newCircuitFromConfig(config: CircuitConfig) {
         this.config = config;
         this.halo2wasm.config(config);
     }
 
     async loadParams() {
-        const kzgParams = await getKzgParams(this.config.k);
+        const kzgParams = await this.context.getKzgParams(this.config.k);
         this.halo2wasm.loadParams(kzgParams);
     }
 
@@ -109,6 +114,4 @@ export abstract class BaseCircuitScaffold {
         const blob = new Blob([proofHex], { type: "text/plain" });
         return blob;
     }
-
-
 }

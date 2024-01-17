@@ -1,1 +1,1 @@
-export * from "@axiom-crypto/halo2-wasm/js"
+export * from "@axiom-crypto/halo2-wasm/js/"

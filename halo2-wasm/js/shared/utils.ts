@@ -19,11 +19,9 @@ export function fetchAndConvertToUint8Array(url: string): Promise<Uint8Array> {
     }
     // Check if running in browser or web worker environment
     else if (typeof window !== "undefined" || typeof self !== "undefined") {
-      console.log("fetching SRS...");
       fetch(url)
         .then((response) => response.arrayBuffer())
         .then((buffer) => {
-          console.log("got SRS successfully");
           resolve(new Uint8Array(buffer));
         })
         .catch(reject);

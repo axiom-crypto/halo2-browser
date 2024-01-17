@@ -4,5 +4,5 @@ export const DEFAULT_CIRCUIT_CONFIG = Object.freeze({
     numLookupAdvice: 1,
     numInstance: 1,
     numLookupBits: 13,
-    numVirtualInstance: 1
+    numVirtualInstance: 1,
 });
