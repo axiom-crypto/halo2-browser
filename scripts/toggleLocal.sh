@@ -1,18 +1,19 @@
 #!/bin/bash
 
 CI=""
+PKGMGR="pnpm"
 if [ "$1" = "ci" ]; then
     CI="ci"
+    PKGMGR="npm"
 fi
-echo $CI
 
 ./scripts/build.sh
 cd halo2-lib-js
 node ./scripts/toggleLocal.js $CI
-pnpm install
+$PKGMGR install
 cd ../halo2-repl
 node ./scripts/toggleLocal.js $CI
-pnpm install
+$PKGMGR install
 cd ../cli
 node ./scripts/toggleLocal.js $CI
-pnpm install
+$PKGMGR install
