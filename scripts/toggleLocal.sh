@@ -7,7 +7,7 @@ if [ "$1" = "ci" ]; then
     PKGMGR="npm"
 fi
 
-./scripts/build.sh
+./scripts/build.sh $CI
 cd halo2-lib-js
 node ./scripts/toggleLocal.js $CI
 $PKGMGR install
