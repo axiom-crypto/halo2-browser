@@ -1,7 +1,14 @@
 [package]
 name = "halo2-wasm"
 version = "0.3.3"
+authors = ["Intrinsic Technologies"]
+license = "MIT"
 edition = "2021"
+repository = "https://github.com/axiom-crypto/halo2-browser/halo2-wasm"
+readme = "readme.md"
+description = "Wasm bindings for the halo2 circuit library."
+rust-version = "1.73.0"
+
 
 [lib]
 crate-type = ["cdylib", "lib"]
