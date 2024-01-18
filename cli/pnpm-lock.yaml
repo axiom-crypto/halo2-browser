@@ -9,8 +9,8 @@ dependencies:
     specifier: 0.2.15-alpha.0
     version: 0.2.15-alpha.0
   '@axiom-crypto/halo2-wasm':
-    specifier: link:../halo2-wasm/pkg
-    version: link:../halo2-wasm/pkg
+    specifier: 0.2.12-alpha.0
+    version: 0.2.12-alpha.0
   commander:
     specifier: ^11.1.0
     version: 11.1.0
