@@ -6,6 +6,6 @@ if [ "$1" = "ci" ]; then
 fi
 
 cd halo2-wasm
-$PKGMGR build
+$PKGMGR run build
 cd ../halo2-lib-js
-$PKGMGR build
+$PKGMGR run build
