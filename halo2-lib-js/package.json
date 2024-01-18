@@ -10,7 +10,7 @@
     "test:constant": "./tests/test_constant.sh"
   },
   "keywords": [
-    "axiom",
+    "axiom", 
     "ethereum",
     "zero knowledge",
     "zk",
