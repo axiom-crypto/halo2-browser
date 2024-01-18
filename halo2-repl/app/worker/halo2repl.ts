@@ -1,7 +1,7 @@
 import prettier from 'prettier/standalone';
 import parserTypescript from 'prettier/parser-typescript';
 import { Halo2CircuitRunner } from '@axiom-crypto/halo2-lib-js';
-import { Halo2LibWasm, getHalo2LibWasm, CircuitScaffold, getKzgParams, DEFAULT_CIRCUIT_CONFIG } from '@axiom-crypto/halo2-wasm/web'
+import { Halo2LibWasm, getHalo2LibWasm, CircuitScaffold, getKzgParams, DEFAULT_CIRCUIT_CONFIG } from '@axiom-crypto/halo2-wasm/web/'
 import { captureConsoleOutput } from '@/utils/log';
 
 

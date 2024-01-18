@@ -1,5 +1,11 @@
 #!/bin/bash
+
+PKGMGR="pnpm"
+if [ "$1" = "ci" ]; then
+    PKGMGR="npm"
+fi
+
 cd halo2-wasm
-pnpm build
+$PKGMGR run build
 cd ../halo2-lib-js
-pnpm build
+$PKGMGR run build
