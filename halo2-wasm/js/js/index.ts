@@ -53,5 +53,6 @@ export abstract class CircuitScaffold extends BaseCircuitScaffold {
     this.shouldTime = options?.shouldTime ?? false;
     this.loadedVk = false;
     this.halo2wasm.config(this.config);
+    this.setContext({getKzgParams})
   }
 }

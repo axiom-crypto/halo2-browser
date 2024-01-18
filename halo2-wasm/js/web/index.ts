@@ -56,6 +56,7 @@ export abstract class CircuitScaffold extends BaseCircuitScaffold {
     this.config = options?.config ?? { ...DEFAULT_CIRCUIT_CONFIG };
     this.shouldTime = options?.shouldTime ?? false;
     this.loadedVk = false;
+    this.setContext({getKzgParams})
   }
 
   async setup(numThreads: number) {
