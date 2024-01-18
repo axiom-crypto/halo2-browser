@@ -27,9 +27,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Set all packages to local and build
-        working-directory: ./
-        run: ./scripts/toggleLocal.sh ci
+      - name: Build halo2-wasm
+        working-directory: halo2-wasm
+        run: |
+          rustup toolchain install nightly-2023-08-12-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-2023-08-12-x86_64-unknown-linux-gnu
+          cargo build --target=x86_64-unknown-linux-gnu --verbose
       - name: Build halo2-lib-js
         working-directory: halo2-lib-js
         run: |
@@ -41,4 +44,3 @@ jobs:
       - name: Test halo2-lib-js constant equivalence
         working-directory: halo2-lib-js
         run: npm run test:constant
-      
