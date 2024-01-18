@@ -1,6 +1,6 @@
 {
   "name": "@axiom-crypto/halo2-wasm-cli",
-  "version": "0.1.7-alpha.0",
+  "version": "0.3.2",
   "description": "Halo2 Javascript library",
   "main": "index.js",
   "scripts": {
@@ -18,8 +18,8 @@
   "author": "Intrinsic Technologies",
   "license": "ISC",
   "dependencies": {
-    "@axiom-crypto/halo2-lib-js": "0.3.0-rc.0",
-    "@axiom-crypto/halo2-wasm": "0.3.0-rc2.0",
+    "@axiom-crypto/halo2-lib-js": "0.3.2",
+    "@axiom-crypto/halo2-wasm": "0.3.3",
     "commander": "^11.1.0",
     "typescript": "^5.2.2"
   },

@@ -6,11 +6,11 @@ settings:
 
 dependencies:
   '@axiom-crypto/halo2-lib-js':
-    specifier: 0.2.15-alpha.0
-    version: 0.2.15-alpha.0
+    specifier: 0.3.2
+    version: 0.3.2
   '@axiom-crypto/halo2-wasm':
-    specifier: 0.2.12-alpha.0
-    version: 0.2.12-alpha.0
+    specifier: link:../halo2-wasm/pkg
+    version: link:../halo2-wasm/pkg
   commander:
     specifier: ^11.1.0
     version: 11.1.0
@@ -32,10 +32,10 @@ packages:
     resolution: {integrity: sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==}
     dev: false
 
-  /@axiom-crypto/halo2-lib-js@0.2.15-alpha.0:
-    resolution: {integrity: sha512-jwEiKTAd/Vm7GH9jljrMu3gNTygN+QwisvVDGU/GCklJigy6R0D0zeweZbDNERGi8e1UGrg6aZamztCkEFaweg==}
+  /@axiom-crypto/halo2-lib-js@0.3.2:
+    resolution: {integrity: sha512-MT4NMU6sCnCnpf8Oy4LRx9txezf8RHr0p06j8a1aNCp/gi9fQ1v9201dS1j7Ck/Nr7YwTC4ZK4J6n8lNJqf9Pg==}
     dependencies:
-      '@axiom-crypto/halo2-wasm': 0.2.12-alpha.0
+      '@axiom-crypto/halo2-wasm': 0.3.2
       ethers: 6.9.0
       prettier: 1.18.2
     transitivePeerDependencies:
@@ -43,8 +43,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@axiom-crypto/halo2-wasm@0.2.12-alpha.0:
-    resolution: {integrity: sha512-zZyAK8chlq36frrGhD9QpvatRhAflcY/XVk62tMv6eAqBjC1rZNi1IF1rRF6toLrIM0vMQUbgFO9oVv+/r50mQ==}
+  /@axiom-crypto/halo2-wasm@0.3.2:
+    resolution: {integrity: sha512-7k4YbEtrKgH6JVoJKgdiot9cllTC7q4aPK7btFTLbXVYMl8oWcAHo+lkEtyjpj5iFqUYx9JTc35KwHUzPfhj7g==}
     dev: false
 
   /@babel/code-frame@7.22.13:
