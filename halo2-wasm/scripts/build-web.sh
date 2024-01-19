@@ -10,6 +10,6 @@ rm temp-pkg/.gitignore
 # Copy a modified version of package.json and readme.md to pkg/
 node ./scripts/makeSubdirPkg.js
 
-# sed -i '' "s|const pkg = await import('../../..');|const pkg = await import('../../../halo2_wasm');|g" temp-pkg/snippets/wasm-bindgen-rayon-7afa899f36665473/src/workerHelpers.js
+sed -i '' "s|const pkg = await import('../../..');|const pkg = await import('../../../halo2_wasm');|g" temp-pkg/snippets/wasm-bindgen-rayon-61c530a5c67cc8eb/src/workerHelpers.js
 
 mv temp-pkg pkg/web
