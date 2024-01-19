@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@axiom-crypto/halo2-wasm':
-    specifier: 0.3.3
-    version: 0.3.3
+    specifier: 0.3.4
+    version: 0.3.4
   ethers:
     specifier: ^6.8.0
     version: 6.8.0
@@ -58,8 +58,8 @@ packages:
       '@jridgewell/trace-mapping': 0.3.20
     dev: true
 
-  /@axiom-crypto/halo2-wasm@0.3.3:
-    resolution: {integrity: sha512-lqXzf6fqzXpcB+pStGrutwjV6TXXshNSFh+XEwLh1di/1UK6pt4fhs0qb2Xc6enYdPpFCXB62UDeTesi4brhFA==}
+  /@axiom-crypto/halo2-wasm@0.3.4:
+    resolution: {integrity: sha512-SUHXnydtx5rY0gQ2zWy0Br6L3iaAFo5RH/AMnOCSM4Nb3inqinBEnXQgEPZ45+EFmeOfRi1xOVUBdo6keZlacQ==}
     dev: false
 
   /@babel/code-frame@7.22.13:
