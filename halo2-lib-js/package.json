@@ -1,6 +1,6 @@
 {
   "name": "@axiom-crypto/halo2-lib-js",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Halo2 Javascript library",
   "main": "index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@axiom-crypto/halo2-wasm": "0.3.3",
+    "@axiom-crypto/halo2-wasm": "0.3.4",
     "ethers": "^6.8.0",
     "prettier": "1.18.2"
   },
