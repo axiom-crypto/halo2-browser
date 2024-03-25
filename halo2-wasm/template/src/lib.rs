@@ -18,7 +18,7 @@ impl MyCircuit {
     #[wasm_bindgen(constructor)]
     pub fn new(circuit: &Halo2Wasm) -> Self {
         let gate = GateChip::new();
-        Halo2WasmTemplate {
+        MyCircuit {
             gate,
             builder: Arc::clone(&circuit.circuit),
         }
