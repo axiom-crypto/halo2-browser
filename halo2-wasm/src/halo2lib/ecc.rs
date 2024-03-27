@@ -36,12 +36,12 @@ type FqPoint = ProperCrtUint<Fr>;
 pub struct Bn254FqPoint(ProperCrtUint<Fr>);
 #[wasm_bindgen]
 impl Bn254FqPoint {
-    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
-        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    fn to_hi_lo(&self, halo2_lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(halo2_lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
-        let [hi, lo] = self.to_hi_lo(lib_wasm);
-        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+    pub fn to_circuit_value_256(&self, halo2_lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(halo2_lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| halo2_lib_wasm.to_js_assigned_value(x));
         JsCircuitValue256 { hi, lo }
     }
 }
@@ -96,12 +96,12 @@ impl Bn254G2AffinePoint {
 pub struct Secp256k1FpPoint(ProperCrtUint<Fr>);
 #[wasm_bindgen]
 impl Secp256k1FpPoint {
-    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
-        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    fn to_hi_lo(&self, halo2_lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(halo2_lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
-        let [hi, lo] = self.to_hi_lo(lib_wasm);
-        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+    pub fn to_circuit_value_256(&self, halo2_lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(halo2_lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| halo2_lib_wasm.to_js_assigned_value(x));
         JsCircuitValue256 { hi, lo }
     }
 }
@@ -114,12 +114,12 @@ impl Secp256k1FpPoint {
 pub struct Secp256k1FqPoint(ProperCrtUint<Fr>);
 #[wasm_bindgen]
 impl Secp256k1FqPoint {
-    fn to_hi_lo(&self, lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
-        convert_3limbs88bits_to_hi_lo(lib_wasm, self.0.limbs())
+    fn to_hi_lo(&self, halo2_lib_wasm: &Halo2LibWasm) -> [AssignedValue<Fr>; 2] {
+        convert_3limbs88bits_to_hi_lo(halo2_lib_wasm, self.0.limbs())
     }
-    pub fn to_circuit_value_256(&self, lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
-        let [hi, lo] = self.to_hi_lo(lib_wasm);
-        let [hi, lo] = [hi, lo].map(|x| lib_wasm.to_js_assigned_value(x));
+    pub fn to_circuit_value_256(&self, halo2_lib_wasm: &Halo2LibWasm) -> JsCircuitValue256 {
+        let [hi, lo] = self.to_hi_lo(halo2_lib_wasm);
+        let [hi, lo] = [hi, lo].map(|x| halo2_lib_wasm.to_js_assigned_value(x));
         JsCircuitValue256 { hi, lo }
     }
 }
@@ -519,14 +519,14 @@ fn constrain_limbs_equality<F: BigPrimeField>(
 }
 
 fn convert_3limbs88bits_to_hi_lo(
-    lib_wasm: &Halo2LibWasm,
+    halo2_lib_wasm: &Halo2LibWasm,
     limbs: &[AssignedValue<Fr>],
 ) -> [AssignedValue<Fr>; 2] {
     assert_eq!(limbs.len(), 3);
     let lo_bits = 128 - 88;
     let hi_bits = 88 - lo_bits;
-    let mut builder = lib_wasm.builder.borrow_mut();
-    let range = &lib_wasm.range;
+    let mut builder = halo2_lib_wasm.builder.borrow_mut();
+    let range = &halo2_lib_wasm.range;
     let gate = &range.gate;
     let ctx = builder.main(0);
     let (limb1_hi, limb1_lo) = range.div_mod(ctx, limbs[1], BigUint::one() << lo_bits, 88);

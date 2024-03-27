@@ -16,11 +16,11 @@ pub struct MyCircuit {
 #[wasm_bindgen]
 impl MyCircuit {
     #[wasm_bindgen(constructor)]
-    pub fn new(circuit: &Halo2Wasm) -> Self {
+    pub fn new(halo2_wasm: &Halo2Wasm) -> Self {
         let gate = GateChip::new();
-        Halo2WasmTemplate {
+        MyCircuit {
             gate,
-            builder: Arc::clone(&circuit.circuit),
+            builder: Arc::clone(&halo2_wasm.circuit),
         }
     }
 
