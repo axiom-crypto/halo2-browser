@@ -42,17 +42,17 @@ pub struct Halo2LibWasm {
 #[wasm_bindgen]
 impl Halo2LibWasm {
     #[wasm_bindgen(constructor)]
-    pub fn new(circuit: &Halo2Wasm) -> Self {
+    pub fn new(halo2_wasm: &Halo2Wasm) -> Self {
         let gate = GateChip::new();
-        let lookup_bits = circuit.circuit_params.clone().unwrap().lookup_bits.unwrap();
+        let lookup_bits = halo2_wasm.circuit_params.clone().unwrap().lookup_bits.unwrap();
         let range = RangeChip::new(
             lookup_bits,
-            circuit.circuit.borrow().lookup_manager().clone(),
+            halo2_wasm.circuit.borrow().lookup_manager().clone(),
         );
         Halo2LibWasm {
             gate,
             range,
-            builder: Rc::clone(&circuit.circuit),
+            builder: Rc::clone(&halo2_wasm.circuit),
         }
     }
 
@@ -470,16 +470,16 @@ impl Halo2LibWasm {
         self.to_js_assigned_value(constant)
     }
 
-    pub fn make_public(&mut self, circuit: &mut Halo2Wasm, a: usize, col: usize) {
+    pub fn make_public(&mut self, halo2_wasm: &mut Halo2Wasm, a: usize, col: usize) {
         let a = self.get_assigned_value(a);
-        let public = circuit.public.get_mut(col).unwrap();
+        let public = halo2_wasm.public.get_mut(col).unwrap();
         public.push(a);
     }
 
-    pub fn log(&mut self, circuit: &Halo2Wasm, a: usize) {
+    pub fn log(&mut self, halo2_wasm: &Halo2Wasm, a: usize) {
         let val = self.value(a);
         unsafe {
-            circuit.log(val);
+            halo2_wasm.log(val);
         }
     }
 
